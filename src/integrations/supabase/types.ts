@@ -14,7 +14,398 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          applied_date: string | null
+          company_id: string | null
+          company_name: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          resume_version: string | null
+          role_title: string
+          source: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_date?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          resume_version?: string | null
+          role_title: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_date?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          resume_version?: string | null
+          role_title?: string
+          source?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      companies: {
+        Row: {
+          created_at: string
+          hiring_signals: string | null
+          id: string
+          industry: string | null
+          name: string
+          notes: string | null
+          stage: string | null
+          updated_at: string
+          user_id: string
+          watchlist: boolean
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          hiring_signals?: string | null
+          id?: string
+          industry?: string | null
+          name: string
+          notes?: string | null
+          stage?: string | null
+          updated_at?: string
+          user_id: string
+          watchlist?: boolean
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          hiring_signals?: string | null
+          id?: string
+          industry?: string | null
+          name?: string
+          notes?: string | null
+          stage?: string | null
+          updated_at?: string
+          user_id?: string
+          watchlist?: boolean
+          website?: string | null
+        }
+        Relationships: []
+      }
+      contact_tags: {
+        Row: {
+          contact_id: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          contact_id: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          contact_id?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_tags_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          company_id: string | null
+          company_name: string | null
+          contact_type: string
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          role: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          company_name?: string | null
+          contact_type?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          company_name?: string | null
+          contact_type?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follow_ups: {
+        Row: {
+          application_id: string | null
+          contact_id: string | null
+          created_at: string
+          description: string
+          due_date: string
+          id: string
+          priority: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          description: string
+          due_date: string
+          id?: string
+          priority?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string
+          id?: string
+          priority?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follow_ups_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follow_ups_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interactions: {
+        Row: {
+          application_id: string | null
+          contact_id: string | null
+          created_at: string
+          direction: string
+          id: string
+          interaction_type: string
+          occurred_at: string
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          interaction_type?: string
+          occurred_at?: string
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          contact_id?: string | null
+          created_at?: string
+          direction?: string
+          id?: string
+          interaction_type?: string
+          occurred_at?: string
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interactions_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          application_id: string | null
+          company_id: string | null
+          contact_id: string | null
+          content: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          company_id?: string | null
+          contact_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          company_id?: string | null
+          contact_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

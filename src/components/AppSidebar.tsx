@@ -6,7 +6,9 @@ import {
   Building2,
   Clock,
   Search,
-  LogOut,
+  Send,
+  Upload,
+  Settings,
 } from "lucide-react";
 import {
   Sidebar,
@@ -17,11 +19,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -29,6 +28,9 @@ const navItems = [
   { title: "Applications", url: "/applications", icon: Briefcase },
   { title: "Companies", url: "/companies", icon: Building2 },
   { title: "Follow-ups", url: "/follow-ups", icon: Clock },
+  { title: "Sequences", url: "/sequences", icon: Send },
+  { title: "Import", url: "/import", icon: Upload },
+  { title: "Settings", url: "/settings", icon: Settings },
   { title: "Search", url: "/search", icon: Search },
 ];
 
@@ -38,7 +40,6 @@ export function AppSidebar() {
   const currentPath = useRouterState({
     select: (s) => s.location.pathname,
   });
-  const { signOut, user } = useAuth();
 
   const isActive = (path: string) => currentPath.startsWith(path);
 
@@ -68,24 +69,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <div className="flex flex-col gap-2 p-2">
-          {!collapsed && user && (
-            <p className="truncate text-xs text-muted-foreground px-2">
-              {user.email}
-            </p>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2"
-            onClick={signOut}
-          >
-            <LogOut className="h-4 w-4" />
-            {!collapsed && <span>Sign Out</span>}
-          </Button>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }

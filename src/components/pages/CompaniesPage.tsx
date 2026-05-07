@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +34,7 @@ const stages = ["startup", "growth", "enterprise"];
 
 export function CompaniesPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -155,7 +157,7 @@ export function CompaniesPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((c) => (
-            <Card key={c.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => openEdit(c)}>
+            <Card key={c.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => navigate({ to: `/companies/${c.id}` })}>
               <CardContent className="p-4 flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

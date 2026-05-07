@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,7 @@ const statusColors: Record<string, string> = {
 
 export function ApplicationsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -174,7 +176,7 @@ export function ApplicationsPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((a) => (
-            <Card key={a.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => openEdit(a)}>
+            <Card key={a.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => navigate({ to: `/applications/${a.id}` })}>
               <CardContent className="p-4 flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +42,7 @@ const contactTypes = ["recruiter", "founder", "referral", "colleague", "other"];
 
 export function ContactsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,19 +117,6 @@ export function ContactsPage() {
     loadContacts();
   };
 
-  const openEdit = (contact: Contact) => {
-    setSelectedContact(contact);
-    setForm({
-      name: contact.name,
-      email: contact.email ?? "",
-      phone: contact.phone ?? "",
-      company_name: contact.company_name ?? "",
-      role: contact.role ?? "",
-      contact_type: contact.contact_type,
-      notes: contact.notes ?? "",
-    });
-    setDialogOpen(true);
-  };
 
   const typeColors: Record<string, string> = {
     recruiter: "bg-primary/10 text-primary",
@@ -208,7 +197,7 @@ export function ContactsPage() {
       ) : (
         <div className="space-y-2">
           {filtered.map((c) => (
-            <Card key={c.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => openEdit(c)}>
+            <Card key={c.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => navigate({ to: `/contacts/${c.id}` })}>
               <CardContent className="p-4 flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

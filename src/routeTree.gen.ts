@@ -11,12 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedSequencesRouteImport } from './routes/_authenticated/sequences'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
+import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedFollowUpsRouteImport } from './routes/_authenticated/follow-ups'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
 import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authenticated/companies'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
+import { Route as AuthGmailCallbackRouteImport } from './routes/auth/gmail/callback'
+import { Route as AuthenticatedSequencesSequenceIdRouteImport } from './routes/_authenticated/sequences/$sequenceId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -27,9 +32,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSequencesRoute = AuthenticatedSequencesRouteImport.update({
+  id: '/sequences',
+  path: '/sequences',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedImportRoute = AuthenticatedImportRouteImport.update({
+  id: '/import',
+  path: '/import',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedFollowUpsRoute = AuthenticatedFollowUpsRouteImport.update({
@@ -58,6 +78,17 @@ const AuthenticatedApplicationsRoute =
     path: '/applications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthGmailCallbackRoute = AuthGmailCallbackRouteImport.update({
+  id: '/auth/gmail/callback',
+  path: '/auth/gmail/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSequencesSequenceIdRoute =
+  AuthenticatedSequencesSequenceIdRouteImport.update({
+    id: '/$sequenceId',
+    path: '/$sequenceId',
+    getParentRoute: () => AuthenticatedSequencesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,7 +97,12 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof AuthenticatedContactsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
+  '/import': typeof AuthenticatedImportRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/sequences': typeof AuthenticatedSequencesRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/sequences/$sequenceId': typeof AuthenticatedSequencesSequenceIdRoute
+  '/auth/gmail/callback': typeof AuthGmailCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,7 +111,12 @@ export interface FileRoutesByTo {
   '/contacts': typeof AuthenticatedContactsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
+  '/import': typeof AuthenticatedImportRoute
   '/search': typeof AuthenticatedSearchRoute
+  '/sequences': typeof AuthenticatedSequencesRouteWithChildren
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/sequences/$sequenceId': typeof AuthenticatedSequencesSequenceIdRoute
+  '/auth/gmail/callback': typeof AuthGmailCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,7 +127,12 @@ export interface FileRoutesById {
   '/_authenticated/contacts': typeof AuthenticatedContactsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/follow-ups': typeof AuthenticatedFollowUpsRoute
+  '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
+  '/_authenticated/sequences': typeof AuthenticatedSequencesRouteWithChildren
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/sequences/$sequenceId': typeof AuthenticatedSequencesSequenceIdRoute
+  '/auth/gmail/callback': typeof AuthGmailCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,7 +143,12 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dashboard'
     | '/follow-ups'
+    | '/import'
     | '/search'
+    | '/sequences'
+    | '/settings'
+    | '/sequences/$sequenceId'
+    | '/auth/gmail/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,7 +157,12 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/dashboard'
     | '/follow-ups'
+    | '/import'
     | '/search'
+    | '/sequences'
+    | '/settings'
+    | '/sequences/$sequenceId'
+    | '/auth/gmail/callback'
   id:
     | '__root__'
     | '/'
@@ -116,12 +172,18 @@ export interface FileRouteTypes {
     | '/_authenticated/contacts'
     | '/_authenticated/dashboard'
     | '/_authenticated/follow-ups'
+    | '/_authenticated/import'
     | '/_authenticated/search'
+    | '/_authenticated/sequences'
+    | '/_authenticated/settings'
+    | '/_authenticated/sequences/$sequenceId'
+    | '/auth/gmail/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthGmailCallbackRoute: typeof AuthGmailCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -140,11 +202,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/sequences': {
+      id: '/_authenticated/sequences'
+      path: '/sequences'
+      fullPath: '/sequences'
+      preLoaderRoute: typeof AuthenticatedSequencesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/search': {
       id: '/_authenticated/search'
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof AuthenticatedSearchRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/import': {
+      id: '/_authenticated/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof AuthenticatedImportRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/follow-ups': {
@@ -182,8 +265,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/auth/gmail/callback': {
+      id: '/auth/gmail/callback'
+      path: '/auth/gmail/callback'
+      fullPath: '/auth/gmail/callback'
+      preLoaderRoute: typeof AuthGmailCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/sequences/$sequenceId': {
+      id: '/_authenticated/sequences/$sequenceId'
+      path: '/$sequenceId'
+      fullPath: '/sequences/$sequenceId'
+      preLoaderRoute: typeof AuthenticatedSequencesSequenceIdRouteImport
+      parentRoute: typeof AuthenticatedSequencesRoute
+    }
   }
 }
+
+interface AuthenticatedSequencesRouteChildren {
+  AuthenticatedSequencesSequenceIdRoute: typeof AuthenticatedSequencesSequenceIdRoute
+}
+
+const AuthenticatedSequencesRouteChildren: AuthenticatedSequencesRouteChildren =
+  {
+    AuthenticatedSequencesSequenceIdRoute:
+      AuthenticatedSequencesSequenceIdRoute,
+  }
+
+const AuthenticatedSequencesRouteWithChildren =
+  AuthenticatedSequencesRoute._addFileChildren(
+    AuthenticatedSequencesRouteChildren,
+  )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
@@ -191,7 +303,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFollowUpsRoute: typeof AuthenticatedFollowUpsRoute
+  AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
+  AuthenticatedSequencesRoute: typeof AuthenticatedSequencesRouteWithChildren
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -200,7 +315,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedContactsRoute: AuthenticatedContactsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFollowUpsRoute: AuthenticatedFollowUpsRoute,
+  AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
+  AuthenticatedSequencesRoute: AuthenticatedSequencesRouteWithChildren,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -210,7 +328,17 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthGmailCallbackRoute: AuthGmailCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

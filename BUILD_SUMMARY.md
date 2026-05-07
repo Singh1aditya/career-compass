@@ -1,7 +1,7 @@
 # Career CRM - Build Summary
 
 **Date Started**: May 6, 2026  
-**Current Phase**: Phase 2 & 3 Complete  
+**Current Phase**: Phase 4 Complete  
 **Status**: Ready for testing and deployment
 
 ---
@@ -50,6 +50,17 @@ src/lib/
 - [x] Automatic interaction creation on replies
 - [x] Settings page with connect/disconnect UI
 
+### Phase 4: CSV Import Complete ✅
+**Bulk Contact Ingestion**:
+- [x] CSV/Excel file upload (drag-drop & file picker)
+- [x] Auto-column detection (maps headers to contact fields)
+- [x] Column mapping UI (override auto-detection)
+- [x] Deduplication by email (vs database & within import)
+- [x] Validation pipeline (name length, email/phone format)
+- [x] Preview before import (shows first 10 contacts + errors)
+- [x] Batch import with default metadata (status=active, type=other)
+- [x] Template CSV download
+
 **Edge Functions Created**:
 ```
 supabase/functions/
@@ -58,6 +69,18 @@ supabase/functions/
 ├── monitor-gmail-replies/         (Check threads for replies)
 ├── process-pending-sends/         (Scheduled email sending)
 └── gmail-poll-replies/            (Monitoring runner)
+```
+
+**Phase 4 Utilities & Components**:
+```
+src/lib/
+└── csv-utils.ts                   (CSV parsing, column detection, validation, deduplication)
+
+src/routes/_authenticated/
+└── import.tsx                      (Route: /import)
+
+src/components/pages/
+└── ImportPage.tsx                 (4-step CSV import wizard)
 ```
 
 **Database Tables**:
@@ -83,6 +106,10 @@ supabase/functions/
 | Reply detection | ✅ Done | Monitors threads, creates interactions |
 | Scheduled sending | ✅ Done | Cron job ready for production |
 | State tracking | ✅ Done | waiting → initial_sent → followup_1/2/3 → replied/closed |
+| CSV import | ✅ Done | Upload, map columns, validate, preview, batch import |
+| Auto-column detection | ✅ Done | Keyword matching on CSV headers |
+| Deduplication | ✅ Done | Detects duplicates by email |
+| Template download | ✅ Done | Sample CSV for users to populate |
 
 ---
 
@@ -233,17 +260,13 @@ replied (stops sequence)
 
 ## 📦 What's Next
 
-### Immediate
+### Immediate (Post Phase 4)
 - [ ] Deploy functions to Supabase
 - [ ] Test with real Gmail account
 - [ ] Set up cron jobs for automated sending
+- [ ] Test CSV import with real files
 
-### Phase 4: CSV Import
-- [ ] Upload CSV/Excel files
-- [ ] Auto-detect columns
-- [ ] Show mapping UI
-- [ ] Deduplication
-- [ ] Batch import
+### Phase 5: Analytics Dashboard
 
 ### Phase 5: Analytics
 - [ ] Email send/reply metrics

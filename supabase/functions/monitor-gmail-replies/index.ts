@@ -89,7 +89,7 @@ serve(async (req: Request) => {
 
       try {
         // Check thread for new messages from sender's perspective
-        const hasReply = await checkThreadForReply(
+        const replyInfo = await checkThreadForReply(
           threadId,
           recipientData.contacts.email,
           oauthToken.access_token
@@ -97,33 +97,53 @@ serve(async (req: Request) => {
 
         checked++;
 
-        if (hasReply) {
-          // Update recipient state to replied
+        if (replyInfo.hasReply) {
+          if (replyInfo.isOutOfOffice) {
+            // Out-of-office auto-reply: don't transition; log and continue
+            await supabase.from("automation_logs").insert({
+              level: "info",
+              function_name: "monitor-gmail-replies",
+              message: "OOO auto-reply detected, skipping state change",
+              payload: { contact: recipientData.contacts.email, threadId },
+            });
+            continue;
+          }
+
+          // Real reply — flip state, lock automation, create interaction
           await supabase
             .from("sequence_recipients")
-            .update({ state: "replied" })
+            .update({
+              state: "replied",
+              automation_active: false,
+              lock_reason: "reply_detected",
+            })
             .eq("id", recipientData.id);
 
-          // Create interaction record
           await supabase.from("interactions").insert({
             user_id: DEFAULT_USER_ID,
             contact_id: recipientData.contact_id,
             type: "email",
             direction: "inbound",
-            summary: "Reply received",
+            summary: "Reply received (auto-detected)",
             date: new Date().toISOString().split("T")[0],
           });
 
+          await supabase.from("automation_logs").insert({
+            level: "info",
+            function_name: "monitor-gmail-replies",
+            message: "reply detected, automation paused",
+            payload: { contact: recipientData.contacts.email, threadId },
+          });
+
           updated++;
-          console.log(
-            `[Gmail] Reply detected from ${recipientData.contacts.email}`
-          );
         }
       } catch (error: any) {
-        console.error(
-          `[Gmail] Error checking thread ${threadId}:`,
-          error.message
-        );
+        await supabase.from("automation_logs").insert({
+          level: "error",
+          function_name: "monitor-gmail-replies",
+          message: "thread check error",
+          payload: { threadId, error: error.message },
+        });
       }
     }
 
@@ -155,51 +175,55 @@ serve(async (req: Request) => {
   }
 });
 
+const OOO_PATTERNS = [
+  /out\s+of\s+office/i,
+  /vacation\s+(auto[-\s]?reply|response)/i,
+  /automatic\s+reply/i,
+  /auto[-\s]?reply/i,
+  /currently\s+(out|away|on\s+leave)/i,
+  /will\s+be\s+(out|away)\s+of\s+the\s+office/i,
+];
+
+function looksLikeOOO(subject: string, snippet: string): boolean {
+  const haystack = `${subject}\n${snippet}`;
+  return OOO_PATTERNS.some((re) => re.test(haystack));
+}
+
 async function checkThreadForReply(
   threadId: string,
   senderEmail: string,
   accessToken: string
-): Promise<boolean> {
+): Promise<{ hasReply: boolean; isOutOfOffice: boolean }> {
   try {
-    // Get thread details from Gmail API
     const response = await fetch(
       `https://www.googleapis.com/gmail/v1/users/me/threads/${threadId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     );
 
-    if (!response.ok) {
-      return false;
-    }
-
+    if (!response.ok) return { hasReply: false, isOutOfOffice: false };
     const thread = await response.json();
-
     if (!thread.messages || thread.messages.length < 2) {
-      // No replies yet (only original message)
-      return false;
+      return { hasReply: false, isOutOfOffice: false };
     }
 
-    // Check if there's a message from someone other than the sender
     for (const message of thread.messages) {
-      const headers = message.payload.headers;
+      const headers = message.payload?.headers ?? [];
       const fromHeader = headers.find((h: any) => h.name === "From");
-
-      if (
-        fromHeader &&
-        !fromHeader.value.toLowerCase().includes("me@") &&
-        !fromHeader.value.toLowerCase().includes("noreply")
-      ) {
-        // Found a reply from someone other than us
-        return true;
+      const subjectHeader = headers.find((h: any) => h.name === "Subject");
+      if (!fromHeader) continue;
+      const fromVal = (fromHeader.value || "").toLowerCase();
+      if (fromVal.includes("me@") || fromVal.includes("noreply") || fromVal.includes("no-reply")) {
+        continue;
       }
+      // Found a reply from someone other than us
+      const subject = subjectHeader?.value ?? "";
+      const snippet = message.snippet ?? "";
+      return { hasReply: true, isOutOfOffice: looksLikeOOO(subject, snippet) };
     }
 
-    return false;
+    return { hasReply: false, isOutOfOffice: false };
   } catch (error: any) {
     console.error("[Gmail API Error]", error.message);
-    return false;
+    return { hasReply: false, isOutOfOffice: false };
   }
 }

@@ -47,20 +47,31 @@ This guide walks you through connecting Gmail to Career CRM to automatically sen
 
 ## Step 2: Set Environment Variables
 
-Update `.env` with your credentials:
+The frontend (Vite) needs the **client ID prefixed with `VITE_`** so it's inlined into the bundle. The Supabase edge functions need the client secret as a server-side secret.
+
+### 2a. Frontend — `.env.local`
 
 ```env
-# Existing variables
-VITE_SUPABASE_URL=https://xmkbvmyemtnfgoxtgzug.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+# Existing — already set
+VITE_SUPABASE_URL=https://cpbntgdqtvqrensrqjmy.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
 
-# Add these new ones
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-FRONTEND_URL=http://localhost:8080
+# Add this — value comes from Step 1.3
+VITE_GOOGLE_CLIENT_ID=123456789-abc.apps.googleusercontent.com
 ```
 
-**For production**, update `FRONTEND_URL` to your actual domain.
+After editing `.env.local`, **restart `npm run dev`** — Vite only re-reads env on startup.
+
+### 2b. Edge functions — Supabase secrets (server-side only, never frontend)
+
+```bash
+supabase secrets set \
+  GOOGLE_CLIENT_ID=123456789-abc.apps.googleusercontent.com \
+  GOOGLE_CLIENT_SECRET=GOCSPX-... \
+  FRONTEND_URL=http://localhost:8080
+```
+
+**For production**, update `FRONTEND_URL` and add your prod redirect URI to the Google OAuth client.
 
 ---
 

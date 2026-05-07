@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Search, Briefcase } from "lucide-react";
+import { Plus, Search, Briefcase, List, LayoutGrid } from "lucide-react";
+import { ApplicationsKanban } from "@/components/ApplicationsKanban";
 
 interface Application {
   id: string;
@@ -48,6 +49,7 @@ export function ApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Application | null>(null);
   const [form, setForm] = useState({
@@ -71,7 +73,9 @@ export function ApplicationsPage() {
   const filtered = apps.filter((a) => {
     const matchesSearch = a.role_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (a.company_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
-    const matchesStatus = statusFilter === "all" || a.status === statusFilter;
+    // Kanban already shows status as columns — applying a status filter
+    // would wipe 6 of the 7 columns. Only apply it in list mode.
+    const matchesStatus = viewMode === "kanban" || statusFilter === "all" || a.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -122,6 +126,27 @@ export function ApplicationsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Applications</h1>
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-md border bg-background p-0.5">
+            <Button
+              type="button"
+              size="sm"
+              variant={viewMode === "list" ? "secondary" : "ghost"}
+              className="h-7 px-2"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="h-3.5 w-3.5 mr-1" /> List
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={viewMode === "kanban" ? "secondary" : "ghost"}
+              className="h-7 px-2"
+              onClick={() => setViewMode("kanban")}
+            >
+              <LayoutGrid className="h-3.5 w-3.5 mr-1" /> Kanban
+            </Button>
+          </div>
         <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Application</Button>
@@ -150,6 +175,7 @@ export function ApplicationsPage() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -157,13 +183,15 @@ export function ApplicationsPage() {
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search applications..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        {viewMode === "list" && (
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              {statuses.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {loading ? (
@@ -173,6 +201,8 @@ export function ApplicationsPage() {
           <Briefcase className="h-10 w-10 mx-auto mb-2 opacity-50" />
           <p>No applications found. Start tracking your job search!</p>
         </CardContent></Card>
+      ) : viewMode === "kanban" ? (
+        <ApplicationsKanban applications={filtered} onChange={loadApps} />
       ) : (
         <div className="space-y-2">
           {filtered.map((a) => (

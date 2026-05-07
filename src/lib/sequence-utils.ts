@@ -1,22 +1,25 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { renderTemplate as renderTemplateCore, loadSender } from "@/lib/templates";
 
 const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
-const DEFAULT_USER_NAME = "You";
 
-/**
- * Render template variables in subject/body
- */
+// Synchronous wrapper for the existing API. For accurate signature rendering
+// at send time, the edge function reads sender settings from the DB directly.
 export function renderTemplate(
   text: string,
-  contact: { name: string; company_name?: string; role?: string }
+  contact: { name: string; company_name?: string | null; role?: string | null; email?: string | null }
 ): string {
-  const firstName = contact.name.split(" ")[0];
-  return text
-    .replace(/{{first_name}}/g, firstName)
-    .replace(/{{company}}/g, contact.company_name || "[Company]")
-    .replace(/{{role}}/g, contact.role || "[Role]")
-    .replace(/{{my_name}}/g, DEFAULT_USER_NAME);
+  return renderTemplateCore(text, contact);
+}
+
+// Use this from UI when you want signature variables filled in for preview.
+export async function renderTemplateWithSender(
+  text: string,
+  contact: { name: string; company_name?: string | null; role?: string | null; email?: string | null }
+): Promise<string> {
+  const sender = await loadSender();
+  return renderTemplateCore(text, contact, sender);
 }
 
 /**
@@ -107,8 +110,8 @@ export async function processPendingSends() {
         if (!contact || !contact.email) continue;
 
         // Render template
-        const subject = renderTemplate(step.template_subject, contact);
-        const body = renderTemplate(step.template_body, contact);
+        const subject = renderTemplate(step.template_subject, contact as any);
+        const body = renderTemplate(step.template_body, contact as any);
 
         // Send email (will be delegated to Edge Function when Gmail is connected)
         const sendResult = await sendEmail({

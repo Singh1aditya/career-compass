@@ -38,9 +38,9 @@ interface FollowUp {
 interface Interaction {
   id: string;
   summary: string | null;
-  interaction_type: string;
+  type: string;
   direction: string;
-  occurred_at: string;
+  date: string;
   contact_id: string | null;
 }
 
@@ -77,7 +77,7 @@ export function DashboardPage() {
         supabase
           .from("interactions")
           .select("*")
-          .order("occurred_at", { ascending: false })
+          .order("date", { ascending: false })
           .limit(5),
       ]);
 
@@ -272,10 +272,10 @@ export function DashboardPage() {
                 <div key={i.id} className="flex items-center gap-3">
                   <div className={`h-2 w-2 rounded-full shrink-0 ${i.direction === "outbound" ? "bg-primary" : "bg-success"}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm truncate">{i.summary || `${i.interaction_type} (${i.direction})`}</p>
-                    <p className="text-xs text-muted-foreground">{format(parseISO(i.occurred_at), "MMM d, h:mm a")}</p>
+                    <p className="text-sm truncate">{i.summary || `${i.type} (${i.direction})`}</p>
+                    <p className="text-xs text-muted-foreground">{format(parseISO(i.date), "MMM d")}</p>
                   </div>
-                  <Badge variant="secondary" className="text-xs shrink-0">{i.interaction_type}</Badge>
+                  <Badge variant="secondary" className="text-xs shrink-0">{i.type}</Badge>
                 </div>
               ))}
             </div>

@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye } from "lucide-react";
+import { renderTemplate } from "@/lib/templates";
 
 interface Contact {
   id: string;
@@ -31,8 +32,6 @@ interface TemplatePreviewProps {
   body: string;
   recipientId?: string;
 }
-
-const DEFAULT_USER_NAME = "You";
 
 export function TemplatePreview({
   subject,
@@ -63,19 +62,8 @@ export function TemplatePreview({
     setLoading(false);
   };
 
-  const renderTemplate = (text: string, contact: Contact | null) => {
-    if (!contact) return text;
-
-    const firstName = contact.name.split(" ")[0];
-    return text
-      .replace(/{{first_name}}/g, firstName)
-      .replace(/{{company}}/g, contact.company_name || "[Company]")
-      .replace(/{{role}}/g, contact.role || "[Role]")
-      .replace(/{{my_name}}/g, DEFAULT_USER_NAME);
-  };
-
-  const renderedSubject = renderTemplate(subject, selectedContact);
-  const renderedBody = renderTemplate(body, selectedContact);
+  const renderedSubject = selectedContact ? renderTemplate(subject, selectedContact) : subject;
+  const renderedBody = selectedContact ? renderTemplate(body, selectedContact) : body;
 
   return (
     <Dialog>
@@ -148,22 +136,12 @@ export function TemplatePreview({
                 Available Variables:
               </p>
               <ul className="text-xs text-blue-800 space-y-1 font-mono">
-                <li>
-                  <code>{"{{"}}first_name{{"}}"}}</code> -{" "}
-                  <span className="font-normal">Contact's first name</span>
-                </li>
-                <li>
-                  <code>{"{{"}}company{{"}}"}}</code> -{" "}
-                  <span className="font-normal">Contact's company</span>
-                </li>
-                <li>
-                  <code>{"{{"}}role{{"}}"}}</code> -{" "}
-                  <span className="font-normal">Contact's role</span>
-                </li>
-                <li>
-                  <code>{"{{"}}my_name{{"}}"}}</code> -{" "}
-                  <span className="font-normal">Your name</span>
-                </li>
+                <li><code>{"{{first_name}}"}</code> — <span className="font-normal">Contact's first name</span></li>
+                <li><code>{"{{full_name}}"}</code> — <span className="font-normal">Contact's full name</span></li>
+                <li><code>{"{{company}}"}</code> — <span className="font-normal">Contact's company</span></li>
+                <li><code>{"{{role}}"}</code> — <span className="font-normal">Contact's role</span></li>
+                <li><code>{"{{my_name}}"}</code> — <span className="font-normal">Your display name (Settings)</span></li>
+                <li><code>{"{{my_signature}}"}</code> — <span className="font-normal">Your signature (Settings)</span></li>
               </ul>
             </div>
           </div>

@@ -37,7 +37,19 @@ serve(async (req: Request) => {
 
     const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
 
-    console.log("[Cron] Processing pending sends...");
+    await log(supabase, "info", "process-pending-sends", "tick start");
+
+    // Read send caps from user_settings (with fallbacks)
+    const { data: settings } = await supabase
+      .from("user_settings")
+      .select("per_tick_email_cap, daily_email_cap, display_name, signature")
+      .eq("user_id", DEFAULT_USER_ID)
+      .maybeSingle();
+    const perTickCap: number = settings?.per_tick_email_cap ?? 10;
+    const sender = {
+      display_name: settings?.display_name ?? "You",
+      signature: settings?.signature ?? "",
+    };
 
     // Get all active sequences
     const { data: sequences } = await supabase
@@ -62,12 +74,13 @@ serve(async (req: Request) => {
     let totalProcessed = 0;
     let totalSent = 0;
 
-    for (const sequence of sequences) {
-      // Get recipients ready to send
+    outer: for (const sequence of sequences) {
+      // Get recipients ready to send (skip replied/bounced/closed AND respect human-takeover lock)
       const { data: recipients } = await supabase
         .from("sequence_recipients")
         .select("*")
         .eq("sequence_id", sequence.id)
+        .eq("automation_active", true)
         .neq("state", "replied")
         .neq("state", "bounced")
         .neq("state", "closed")
@@ -76,6 +89,10 @@ serve(async (req: Request) => {
       if (!recipients || recipients.length === 0) continue;
 
       for (const recipient of recipients) {
+        if (totalSent >= perTickCap) {
+          await log(supabase, "info", "process-pending-sends", "per-tick cap reached", { perTickCap });
+          break outer;
+        }
         totalProcessed++;
 
         try {
@@ -100,18 +117,16 @@ serve(async (req: Request) => {
 
           if (!contact || !contact.email) continue;
 
-          // Render template
-          const subject = renderTemplate(step.template_subject, contact);
-          const body = renderTemplate(step.template_body, contact);
+          // Render template (with sender signature)
+          const subject = renderTemplate(step.template_subject, contact, sender);
+          const body = renderTemplate(step.template_body, contact, sender);
 
-          // Send email via Edge Function
-          const sendResult = await sendEmailViaGmail(
-            contact.email,
-            subject,
-            body,
-            recipient.id,
-            step.step_number
-          );
+          // Send email via Edge Function — 1 retry on failure
+          let sendResult = await sendEmailViaGmail(contact.email, subject, body, recipient.id, step.step_number);
+          if (!sendResult.success) {
+            await new Promise((r) => setTimeout(r, 1500));
+            sendResult = await sendEmailViaGmail(contact.email, subject, body, recipient.id, step.step_number);
+          }
 
           if (sendResult.success) {
             totalSent++;
@@ -144,16 +159,29 @@ serve(async (req: Request) => {
               `[Cron] Sent email to ${contact.email} (state: ${nextState})`
             );
           } else {
-            console.error(
-              `[Cron] Failed to send to ${contact.email}:`,
-              sendResult.error
-            );
+            await log(supabase, "error", "process-pending-sends", "send failed", {
+              recipientId: recipient.id,
+              email: contact.email,
+              error: sendResult.error,
+            });
+            // Persistent 4xx = mark bounced and stop trying
+            if (sendResult.status && sendResult.status >= 400 && sendResult.status < 500) {
+              await supabase
+                .from("sequence_recipients")
+                .update({ state: "bounced", automation_active: false, lock_reason: "bounced" })
+                .eq("id", recipient.id);
+            }
           }
         } catch (error: any) {
-          console.error(`[Cron] Error processing recipient:`, error.message);
+          await log(supabase, "error", "process-pending-sends", "unexpected error", {
+            recipientId: recipient.id,
+            error: error.message,
+          });
         }
       }
     }
+
+    await log(supabase, "info", "process-pending-sends", "tick done", { totalProcessed, totalSent });
 
     return new Response(
       JSON.stringify({
@@ -185,14 +213,34 @@ serve(async (req: Request) => {
 
 function renderTemplate(
   text: string,
-  contact: { name: string; company_name?: string; role?: string }
+  contact: { name: string; company_name?: string; role?: string; email?: string },
+  sender: { display_name?: string; signature?: string } = {}
 ): string {
-  const firstName = contact.name.split(" ")[0];
+  const firstName = (contact.name ?? "").split(" ")[0] || "[First Name]";
   return text
-    .replace(/{{first_name}}/g, firstName)
-    .replace(/{{company}}/g, contact.company_name || "[Company]")
-    .replace(/{{role}}/g, contact.role || "[Role]")
-    .replace(/{{my_name}}/g, "You");
+    .replace(/{{\s*first_name\s*}}/gi, firstName)
+    .replace(/{{\s*full_name\s*}}/gi, contact.name || "[Name]")
+    .replace(/{{\s*company\s*}}/gi, contact.company_name || "[Company]")
+    .replace(/{{\s*role\s*}}/gi, contact.role || "[Role]")
+    .replace(/{{\s*contact_email\s*}}/gi, contact.email || "")
+    .replace(/{{\s*my_name\s*}}/gi, sender.display_name || "You")
+    .replace(/{{\s*my_signature\s*}}/gi, sender.signature || "");
+}
+
+async function log(supabase: any, level: string, fn: string, message: string, payload?: any) {
+  try {
+    await supabase.from("automation_logs").insert({
+      level,
+      function_name: fn,
+      message,
+      payload: payload ?? null,
+    });
+  } catch (_e) {
+    // Logging failures must not crash the loop
+  }
+  // Also emit to deno console
+  // eslint-disable-next-line no-console
+  console.log(`[${fn}] ${level.toUpperCase()} ${message}`, payload ?? "");
 }
 
 function getNextState(stepType: string): string {
@@ -237,7 +285,7 @@ async function sendEmailViaGmail(
   body: string,
   recipientId: string,
   stepNumber: number
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; status?: number }> {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const response = await fetch(
@@ -248,21 +296,15 @@ async function sendEmailViaGmail(
           "Content-Type": "application/json",
           Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
         },
-        body: JSON.stringify({
-          to,
-          subject,
-          body,
-          recipientId,
-          stepNumber,
-        }),
+        body: JSON.stringify({ to, subject, body, recipientId, stepNumber }),
       }
     );
 
     if (!response.ok) {
-      const error = await response.json();
-      return { success: false, error: error.error };
+      let err: any = {};
+      try { err = await response.json(); } catch (_e) {}
+      return { success: false, error: err.error ?? `HTTP ${response.status}`, status: response.status };
     }
-
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

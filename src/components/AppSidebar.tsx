@@ -21,6 +21,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -53,6 +54,8 @@ export function AppSidebar() {
               {!collapsed && <span className="font-semibold">Career CRM</span>}
             </div>
           </SidebarGroupLabel>
+          <GlobalSearch collapsed={collapsed} />
+
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (

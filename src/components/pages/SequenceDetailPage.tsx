@@ -65,6 +65,7 @@ const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
 export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
   const navigate = useNavigate();
   const [sequence, setSequence] = useState<Sequence | null>(null);
+  const [targetCompany, setTargetCompany] = useState<string | null>(null);
   const [steps, setSteps] = useState<SequenceStep[]>([]);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,7 +90,19 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
       .single();
 
     if (seqData) {
-      setSequence(seqData);
+      setSequence(seqData as Sequence);
+
+      // Pull linked application's company so we can pre-filter recipients
+      if (seqData.application_id) {
+        const { data: appData } = await supabase
+          .from("applications")
+          .select("company_name")
+          .eq("id", seqData.application_id)
+          .maybeSingle();
+        setTargetCompany((appData as any)?.company_name ?? null);
+      } else {
+        setTargetCompany(null);
+      }
 
       const { data: stepsData } = await supabase
         .from("sequence_steps")
@@ -284,10 +297,7 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                       placeholder="e.g., Checking in on {{role}} role at {{company}}"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Variables: {{'{{'}}first_name{{'}}'}}
-                      , {{{'{' }}}company{{'}}'}}
-                      , {{{'{' }}}role{{'}}'}}
-                      , {{{'{' }}}my_name{{'}}'}}
+                      Variables: <code>{"{{first_name}}"}</code>, <code>{"{{company}}"}</code>, <code>{"{{role}}"}</code>, <code>{"{{my_name}}"}</code>, <code>{"{{my_signature}}"}</code>
                     </p>
                   </div>
                   <div>
@@ -382,6 +392,7 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
             <AddRecipientsDialog
               sequenceId={sequenceId}
               onRecipientsAdded={loadSequence}
+              targetCompany={targetCompany}
             />
           </div>
 

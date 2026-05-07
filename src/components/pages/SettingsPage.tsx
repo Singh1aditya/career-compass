@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Lock, Bell, Clock, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { EmailScanStatus } from "@/components/EmailScanStatus";
+import { UserSettingsPanel } from "@/components/UserSettingsPanel";
 
 const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -39,14 +41,20 @@ export function SettingsPage() {
   };
 
   const handleConnectGmail = () => {
-    const clientId = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+    if (!clientId || clientId.startsWith("YOUR_") || !clientId.includes(".apps.googleusercontent.com")) {
+      toast.error(
+        "VITE_GOOGLE_CLIENT_ID is not set. Add it to .env.local — see GMAIL_SETUP.md.",
+      );
+      return;
+    }
     const redirectUri = `${window.location.origin}/auth/gmail/callback`;
     const scope = [
       "https://www.googleapis.com/auth/gmail.send",
       "https://www.googleapis.com/auth/gmail.readonly",
     ].join(" ");
 
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
 
     window.location.href = authUrl;
   };
@@ -136,6 +144,12 @@ export function SettingsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* User Settings (signature, caps) */}
+        <UserSettingsPanel />
+
+        {/* Email Auto-Ingest */}
+        <EmailScanStatus gmailConnected={gmailConnected} />
 
         {/* Security */}
         <Card>

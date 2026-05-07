@@ -1,7 +1,14 @@
--- Complete Database Setup for Career CRM
--- Run this in Supabase SQL Editor
+-- ====================================================================
+-- COMPLETE BOOTSTRAP SQL for project cpbntgdqtvqrensrqjmy
+-- ====================================================================
+-- Paste this entire file into the Supabase SQL Editor and click Run.
+-- It is idempotent: safe to re-run.
+--
+-- Creates: all 14 tables, indexes, oauth_tokens, processed_emails
+-- Disables: RLS on every table (personal app has no auth)
+-- ====================================================================
 
--- Profiles table
+-- Profiles
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   display_name TEXT,
@@ -10,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Companies table
+-- Companies
 CREATE TABLE IF NOT EXISTS public.companies (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
@@ -25,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.companies (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Contacts table
+-- Contacts
 CREATE TABLE IF NOT EXISTS public.contacts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
@@ -42,7 +49,7 @@ CREATE TABLE IF NOT EXISTS public.contacts (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Tags table
+-- Tags
 CREATE TABLE IF NOT EXISTS public.tags (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
@@ -51,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.tags (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Contact-Tags join table
+-- Contact_tags
 CREATE TABLE IF NOT EXISTS public.contact_tags (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   contact_id UUID NOT NULL REFERENCES public.contacts(id) ON DELETE CASCADE,
@@ -59,7 +66,7 @@ CREATE TABLE IF NOT EXISTS public.contact_tags (
   UNIQUE(contact_id, tag_id)
 );
 
--- Applications table
+-- Applications
 CREATE TABLE IF NOT EXISTS public.applications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
@@ -75,7 +82,7 @@ CREATE TABLE IF NOT EXISTS public.applications (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Interactions table
+-- Interactions
 CREATE TABLE IF NOT EXISTS public.interactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
@@ -89,7 +96,7 @@ CREATE TABLE IF NOT EXISTS public.interactions (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Notes table
+-- Notes
 CREATE TABLE IF NOT EXISTS public.notes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
@@ -100,7 +107,7 @@ CREATE TABLE IF NOT EXISTS public.notes (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Follow-ups table
+-- Follow-ups
 CREATE TABLE IF NOT EXISTS public.follow_ups (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
@@ -113,7 +120,7 @@ CREATE TABLE IF NOT EXISTS public.follow_ups (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Sequences tables (Phase 2)
+-- Sequences
 CREATE TABLE IF NOT EXISTS public.sequences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
@@ -158,7 +165,22 @@ CREATE TABLE IF NOT EXISTS public.sequence_sends (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Processed emails table (Phase 5 — Gmail auto-ingest)
+-- OAuth tokens (Phase 3)
+CREATE TABLE IF NOT EXISTS public.oauth_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  provider TEXT NOT NULL,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT,
+  expires_at TIMESTAMPTZ,
+  scope TEXT,
+  email TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(user_id, provider)
+);
+
+-- Processed emails (Phase 5 — Gmail auto-ingest)
 CREATE TABLE IF NOT EXISTS public.processed_emails (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL,
@@ -177,7 +199,7 @@ CREATE TABLE IF NOT EXISTS public.processed_emails (
 CREATE INDEX IF NOT EXISTS idx_processed_emails_user ON public.processed_emails(user_id);
 CREATE INDEX IF NOT EXISTS idx_processed_emails_message ON public.processed_emails(gmail_message_id);
 
--- Disable RLS for personal app (no authentication required)
+-- Disable RLS everywhere (personal app, no auth)
 ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.companies DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contacts DISABLE ROW LEVEL SECURITY;
@@ -191,4 +213,8 @@ ALTER TABLE public.sequences DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sequence_steps DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sequence_recipients DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sequence_sends DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.oauth_tokens DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.processed_emails DISABLE ROW LEVEL SECURITY;
+
+-- Force PostgREST to refresh its schema cache
+NOTIFY pgrst, 'reload schema';

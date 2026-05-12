@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
 interface GmailCallbackSearch {
   code?: string;
   error?: string;
@@ -34,9 +37,13 @@ function GmailCallbackComponent() {
       }
 
       // Call Edge Function to exchange code for tokens
-      const response = await fetch("/api/gmail-exchange-code", {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/gmail-exchange-code`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_ANON_KEY,
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        },
         body: JSON.stringify({ code: search.code }),
       });
 

@@ -12,14 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedSequencesRouteImport } from './routes/_authenticated/sequences'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedImportRouteImport } from './routes/_authenticated/import'
 import { Route as AuthenticatedFollowUpsRouteImport } from './routes/_authenticated/follow-ups'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
-import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authenticated/companies'
-import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
+import { Route as AuthenticatedSequencesIndexRouteImport } from './routes/_authenticated/sequences/index'
+import { Route as AuthenticatedContactsIndexRouteImport } from './routes/_authenticated/contacts/index'
+import { Route as AuthenticatedCompaniesIndexRouteImport } from './routes/_authenticated/companies/index'
+import { Route as AuthenticatedApplicationsIndexRouteImport } from './routes/_authenticated/applications/index'
 import { Route as AuthGmailCallbackRouteImport } from './routes/auth/gmail/callback'
 import { Route as AuthenticatedSequencesSequenceIdRouteImport } from './routes/_authenticated/sequences/$sequenceId'
 import { Route as AuthenticatedContactsContactIdRouteImport } from './routes/_authenticated/contacts/$contactId'
@@ -38,11 +38,6 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedSequencesRoute = AuthenticatedSequencesRouteImport.update({
-  id: '/sequences',
-  path: '/sequences',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
@@ -65,20 +60,28 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedContactsRoute = AuthenticatedContactsRouteImport.update({
-  id: '/contacts',
-  path: '/contacts',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedCompaniesRoute = AuthenticatedCompaniesRouteImport.update({
-  id: '/companies',
-  path: '/companies',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedApplicationsRoute =
-  AuthenticatedApplicationsRouteImport.update({
-    id: '/applications',
-    path: '/applications',
+const AuthenticatedSequencesIndexRoute =
+  AuthenticatedSequencesIndexRouteImport.update({
+    id: '/sequences/',
+    path: '/sequences/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedContactsIndexRoute =
+  AuthenticatedContactsIndexRouteImport.update({
+    id: '/contacts/',
+    path: '/contacts/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCompaniesIndexRoute =
+  AuthenticatedCompaniesIndexRouteImport.update({
+    id: '/companies/',
+    path: '/companies/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedApplicationsIndexRoute =
+  AuthenticatedApplicationsIndexRouteImport.update({
+    id: '/applications/',
+    path: '/applications/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthGmailCallbackRoute = AuthGmailCallbackRouteImport.update({
@@ -88,135 +91,135 @@ const AuthGmailCallbackRoute = AuthGmailCallbackRouteImport.update({
 } as any)
 const AuthenticatedSequencesSequenceIdRoute =
   AuthenticatedSequencesSequenceIdRouteImport.update({
-    id: '/$sequenceId',
-    path: '/$sequenceId',
-    getParentRoute: () => AuthenticatedSequencesRoute,
+    id: '/sequences/$sequenceId',
+    path: '/sequences/$sequenceId',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedContactsContactIdRoute =
   AuthenticatedContactsContactIdRouteImport.update({
-    id: '/$contactId',
-    path: '/$contactId',
-    getParentRoute: () => AuthenticatedContactsRoute,
+    id: '/contacts/$contactId',
+    path: '/contacts/$contactId',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedCompaniesCompanyIdRoute =
   AuthenticatedCompaniesCompanyIdRouteImport.update({
-    id: '/$companyId',
-    path: '/$companyId',
-    getParentRoute: () => AuthenticatedCompaniesRoute,
+    id: '/companies/$companyId',
+    path: '/companies/$companyId',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedApplicationsApplicationIdRoute =
   AuthenticatedApplicationsApplicationIdRouteImport.update({
-    id: '/$applicationId',
-    path: '/$applicationId',
-    getParentRoute: () => AuthenticatedApplicationsRoute,
+    id: '/applications/$applicationId',
+    path: '/applications/$applicationId',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/applications': typeof AuthenticatedApplicationsRouteWithChildren
-  '/companies': typeof AuthenticatedCompaniesRouteWithChildren
-  '/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/import': typeof AuthenticatedImportRoute
   '/search': typeof AuthenticatedSearchRoute
-  '/sequences': typeof AuthenticatedSequencesRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
   '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/contacts/$contactId': typeof AuthenticatedContactsContactIdRoute
   '/sequences/$sequenceId': typeof AuthenticatedSequencesSequenceIdRoute
   '/auth/gmail/callback': typeof AuthGmailCallbackRoute
+  '/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/companies/': typeof AuthenticatedCompaniesIndexRoute
+  '/contacts/': typeof AuthenticatedContactsIndexRoute
+  '/sequences/': typeof AuthenticatedSequencesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/applications': typeof AuthenticatedApplicationsRouteWithChildren
-  '/companies': typeof AuthenticatedCompaniesRouteWithChildren
-  '/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/import': typeof AuthenticatedImportRoute
   '/search': typeof AuthenticatedSearchRoute
-  '/sequences': typeof AuthenticatedSequencesRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
   '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/contacts/$contactId': typeof AuthenticatedContactsContactIdRoute
   '/sequences/$sequenceId': typeof AuthenticatedSequencesSequenceIdRoute
   '/auth/gmail/callback': typeof AuthGmailCallbackRoute
+  '/applications': typeof AuthenticatedApplicationsIndexRoute
+  '/companies': typeof AuthenticatedCompaniesIndexRoute
+  '/contacts': typeof AuthenticatedContactsIndexRoute
+  '/sequences': typeof AuthenticatedSequencesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/_authenticated/applications': typeof AuthenticatedApplicationsRouteWithChildren
-  '/_authenticated/companies': typeof AuthenticatedCompaniesRouteWithChildren
-  '/_authenticated/contacts': typeof AuthenticatedContactsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/follow-ups': typeof AuthenticatedFollowUpsRoute
   '/_authenticated/import': typeof AuthenticatedImportRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
-  '/_authenticated/sequences': typeof AuthenticatedSequencesRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/applications/$applicationId': typeof AuthenticatedApplicationsApplicationIdRoute
   '/_authenticated/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/_authenticated/contacts/$contactId': typeof AuthenticatedContactsContactIdRoute
   '/_authenticated/sequences/$sequenceId': typeof AuthenticatedSequencesSequenceIdRoute
   '/auth/gmail/callback': typeof AuthGmailCallbackRoute
+  '/_authenticated/applications/': typeof AuthenticatedApplicationsIndexRoute
+  '/_authenticated/companies/': typeof AuthenticatedCompaniesIndexRoute
+  '/_authenticated/contacts/': typeof AuthenticatedContactsIndexRoute
+  '/_authenticated/sequences/': typeof AuthenticatedSequencesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/applications'
-    | '/companies'
-    | '/contacts'
     | '/dashboard'
     | '/follow-ups'
     | '/import'
     | '/search'
-    | '/sequences'
     | '/settings'
     | '/applications/$applicationId'
     | '/companies/$companyId'
     | '/contacts/$contactId'
     | '/sequences/$sequenceId'
     | '/auth/gmail/callback'
+    | '/applications/'
+    | '/companies/'
+    | '/contacts/'
+    | '/sequences/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/applications'
-    | '/companies'
-    | '/contacts'
     | '/dashboard'
     | '/follow-ups'
     | '/import'
     | '/search'
-    | '/sequences'
     | '/settings'
     | '/applications/$applicationId'
     | '/companies/$companyId'
     | '/contacts/$contactId'
     | '/sequences/$sequenceId'
     | '/auth/gmail/callback'
+    | '/applications'
+    | '/companies'
+    | '/contacts'
+    | '/sequences'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/_authenticated/applications'
-    | '/_authenticated/companies'
-    | '/_authenticated/contacts'
     | '/_authenticated/dashboard'
     | '/_authenticated/follow-ups'
     | '/_authenticated/import'
     | '/_authenticated/search'
-    | '/_authenticated/sequences'
     | '/_authenticated/settings'
     | '/_authenticated/applications/$applicationId'
     | '/_authenticated/companies/$companyId'
     | '/_authenticated/contacts/$contactId'
     | '/_authenticated/sequences/$sequenceId'
     | '/auth/gmail/callback'
+    | '/_authenticated/applications/'
+    | '/_authenticated/companies/'
+    | '/_authenticated/contacts/'
+    | '/_authenticated/sequences/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -248,13 +251,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/sequences': {
-      id: '/_authenticated/sequences'
-      path: '/sequences'
-      fullPath: '/sequences'
-      preLoaderRoute: typeof AuthenticatedSequencesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/search': {
       id: '/_authenticated/search'
       path: '/search'
@@ -283,25 +279,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/contacts': {
-      id: '/_authenticated/contacts'
+    '/_authenticated/sequences/': {
+      id: '/_authenticated/sequences/'
+      path: '/sequences'
+      fullPath: '/sequences/'
+      preLoaderRoute: typeof AuthenticatedSequencesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/contacts/': {
+      id: '/_authenticated/contacts/'
       path: '/contacts'
-      fullPath: '/contacts'
-      preLoaderRoute: typeof AuthenticatedContactsRouteImport
+      fullPath: '/contacts/'
+      preLoaderRoute: typeof AuthenticatedContactsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/companies': {
-      id: '/_authenticated/companies'
+    '/_authenticated/companies/': {
+      id: '/_authenticated/companies/'
       path: '/companies'
-      fullPath: '/companies'
-      preLoaderRoute: typeof AuthenticatedCompaniesRouteImport
+      fullPath: '/companies/'
+      preLoaderRoute: typeof AuthenticatedCompaniesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/applications': {
-      id: '/_authenticated/applications'
+    '/_authenticated/applications/': {
+      id: '/_authenticated/applications/'
       path: '/applications'
-      fullPath: '/applications'
-      preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
+      fullPath: '/applications/'
+      preLoaderRoute: typeof AuthenticatedApplicationsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/auth/gmail/callback': {
@@ -313,114 +316,66 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/sequences/$sequenceId': {
       id: '/_authenticated/sequences/$sequenceId'
-      path: '/$sequenceId'
+      path: '/sequences/$sequenceId'
       fullPath: '/sequences/$sequenceId'
       preLoaderRoute: typeof AuthenticatedSequencesSequenceIdRouteImport
-      parentRoute: typeof AuthenticatedSequencesRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/contacts/$contactId': {
       id: '/_authenticated/contacts/$contactId'
-      path: '/$contactId'
+      path: '/contacts/$contactId'
       fullPath: '/contacts/$contactId'
       preLoaderRoute: typeof AuthenticatedContactsContactIdRouteImport
-      parentRoute: typeof AuthenticatedContactsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/companies/$companyId': {
       id: '/_authenticated/companies/$companyId'
-      path: '/$companyId'
+      path: '/companies/$companyId'
       fullPath: '/companies/$companyId'
       preLoaderRoute: typeof AuthenticatedCompaniesCompanyIdRouteImport
-      parentRoute: typeof AuthenticatedCompaniesRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/applications/$applicationId': {
       id: '/_authenticated/applications/$applicationId'
-      path: '/$applicationId'
+      path: '/applications/$applicationId'
       fullPath: '/applications/$applicationId'
       preLoaderRoute: typeof AuthenticatedApplicationsApplicationIdRouteImport
-      parentRoute: typeof AuthenticatedApplicationsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
 
-interface AuthenticatedApplicationsRouteChildren {
-  AuthenticatedApplicationsApplicationIdRoute: typeof AuthenticatedApplicationsApplicationIdRoute
-}
-
-const AuthenticatedApplicationsRouteChildren: AuthenticatedApplicationsRouteChildren =
-  {
-    AuthenticatedApplicationsApplicationIdRoute:
-      AuthenticatedApplicationsApplicationIdRoute,
-  }
-
-const AuthenticatedApplicationsRouteWithChildren =
-  AuthenticatedApplicationsRoute._addFileChildren(
-    AuthenticatedApplicationsRouteChildren,
-  )
-
-interface AuthenticatedCompaniesRouteChildren {
-  AuthenticatedCompaniesCompanyIdRoute: typeof AuthenticatedCompaniesCompanyIdRoute
-}
-
-const AuthenticatedCompaniesRouteChildren: AuthenticatedCompaniesRouteChildren =
-  {
-    AuthenticatedCompaniesCompanyIdRoute: AuthenticatedCompaniesCompanyIdRoute,
-  }
-
-const AuthenticatedCompaniesRouteWithChildren =
-  AuthenticatedCompaniesRoute._addFileChildren(
-    AuthenticatedCompaniesRouteChildren,
-  )
-
-interface AuthenticatedContactsRouteChildren {
-  AuthenticatedContactsContactIdRoute: typeof AuthenticatedContactsContactIdRoute
-}
-
-const AuthenticatedContactsRouteChildren: AuthenticatedContactsRouteChildren = {
-  AuthenticatedContactsContactIdRoute: AuthenticatedContactsContactIdRoute,
-}
-
-const AuthenticatedContactsRouteWithChildren =
-  AuthenticatedContactsRoute._addFileChildren(
-    AuthenticatedContactsRouteChildren,
-  )
-
-interface AuthenticatedSequencesRouteChildren {
-  AuthenticatedSequencesSequenceIdRoute: typeof AuthenticatedSequencesSequenceIdRoute
-}
-
-const AuthenticatedSequencesRouteChildren: AuthenticatedSequencesRouteChildren =
-  {
-    AuthenticatedSequencesSequenceIdRoute:
-      AuthenticatedSequencesSequenceIdRoute,
-  }
-
-const AuthenticatedSequencesRouteWithChildren =
-  AuthenticatedSequencesRoute._addFileChildren(
-    AuthenticatedSequencesRouteChildren,
-  )
-
 interface AuthenticatedRouteChildren {
-  AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRouteWithChildren
-  AuthenticatedCompaniesRoute: typeof AuthenticatedCompaniesRouteWithChildren
-  AuthenticatedContactsRoute: typeof AuthenticatedContactsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFollowUpsRoute: typeof AuthenticatedFollowUpsRoute
   AuthenticatedImportRoute: typeof AuthenticatedImportRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
-  AuthenticatedSequencesRoute: typeof AuthenticatedSequencesRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedApplicationsApplicationIdRoute: typeof AuthenticatedApplicationsApplicationIdRoute
+  AuthenticatedCompaniesCompanyIdRoute: typeof AuthenticatedCompaniesCompanyIdRoute
+  AuthenticatedContactsContactIdRoute: typeof AuthenticatedContactsContactIdRoute
+  AuthenticatedSequencesSequenceIdRoute: typeof AuthenticatedSequencesSequenceIdRoute
+  AuthenticatedApplicationsIndexRoute: typeof AuthenticatedApplicationsIndexRoute
+  AuthenticatedCompaniesIndexRoute: typeof AuthenticatedCompaniesIndexRoute
+  AuthenticatedContactsIndexRoute: typeof AuthenticatedContactsIndexRoute
+  AuthenticatedSequencesIndexRoute: typeof AuthenticatedSequencesIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedApplicationsRoute: AuthenticatedApplicationsRouteWithChildren,
-  AuthenticatedCompaniesRoute: AuthenticatedCompaniesRouteWithChildren,
-  AuthenticatedContactsRoute: AuthenticatedContactsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFollowUpsRoute: AuthenticatedFollowUpsRoute,
   AuthenticatedImportRoute: AuthenticatedImportRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
-  AuthenticatedSequencesRoute: AuthenticatedSequencesRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedApplicationsApplicationIdRoute:
+    AuthenticatedApplicationsApplicationIdRoute,
+  AuthenticatedCompaniesCompanyIdRoute: AuthenticatedCompaniesCompanyIdRoute,
+  AuthenticatedContactsContactIdRoute: AuthenticatedContactsContactIdRoute,
+  AuthenticatedSequencesSequenceIdRoute: AuthenticatedSequencesSequenceIdRoute,
+  AuthenticatedApplicationsIndexRoute: AuthenticatedApplicationsIndexRoute,
+  AuthenticatedCompaniesIndexRoute: AuthenticatedCompaniesIndexRoute,
+  AuthenticatedContactsIndexRoute: AuthenticatedContactsIndexRoute,
+  AuthenticatedSequencesIndexRoute: AuthenticatedSequencesIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

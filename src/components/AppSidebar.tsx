@@ -5,7 +5,6 @@ import {
   Briefcase,
   Building2,
   Clock,
-  Search,
   Send,
   Upload,
   Settings,
@@ -32,7 +31,6 @@ const navItems = [
   { title: "Sequences", url: "/sequences", icon: Send },
   { title: "Import", url: "/import", icon: Upload },
   { title: "Settings", url: "/settings", icon: Settings },
-  { title: "Search", url: "/search", icon: Search },
 ];
 
 export function AppSidebar() {

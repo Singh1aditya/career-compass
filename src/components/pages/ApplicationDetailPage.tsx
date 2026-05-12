@@ -20,18 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { ArrowLeft, Briefcase, Save, Send, Users } from "lucide-react";
 import { toast } from "sonner";
 import { LogInteractionDialog } from "@/components/LogInteractionDialog";
 import { NotesList } from "@/components/NotesList";
 import { FollowUpsList } from "@/components/FollowUpsList";
+import { StartOutreachWizard } from "@/components/StartOutreachWizard";
 
 const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
 const STATUSES = ["wishlist", "applied", "screening", "interviewing", "offer", "rejected", "withdrawn"];
@@ -93,8 +87,7 @@ export function ApplicationDetailPage({ applicationId }: Props) {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Application>>({});
-  const [campaignOpen, setCampaignOpen] = useState(false);
-  const [campaignName, setCampaignName] = useState("");
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   useEffect(() => { load(); }, [applicationId]);
 
@@ -163,24 +156,9 @@ export function ApplicationDetailPage({ applicationId }: Props) {
     load();
   };
 
-  const startCampaign = async () => {
-    if (!app) return;
-    const name = campaignName.trim() || `Outreach for ${app.role_title}${app.company_name ? ` at ${app.company_name}` : ""}`;
-    const { data: seq, error } = await supabase
-      .from("sequences")
-      .insert({
-        user_id: DEFAULT_USER_ID,
-        name,
-        application_id: applicationId,
-        status: "draft",
-      })
-      .select()
-      .single();
-    if (error) { toast.error(error.message); return; }
-    toast.success("Campaign created — add steps and recipients");
-    setCampaignOpen(false);
-    setCampaignName("");
-    if (seq) navigate({ to: `/sequences/${seq.id}` });
+  const handleWizardCreated = (sequenceId: string) => {
+    setWizardOpen(false);
+    navigate({ to: "/sequences/$sequenceId", params: { sequenceId } });
   };
 
   if (loading) return <div className="p-6 text-muted-foreground">Loading...</div>;
@@ -227,7 +205,7 @@ export function ApplicationDetailPage({ applicationId }: Props) {
             </div>
             <div className="flex gap-2 shrink-0">
               <LogInteractionDialog applicationId={app.id} onLogged={load} />
-              <Button size="sm" onClick={() => setCampaignOpen(true)}>
+              <Button size="sm" onClick={() => setWizardOpen(true)}>
                 <Send className="h-3.5 w-3.5 mr-1" /> Start Outreach Campaign
               </Button>
             </div>
@@ -437,31 +415,14 @@ export function ApplicationDetailPage({ applicationId }: Props) {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={campaignOpen} onOpenChange={setCampaignOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Start Outreach Campaign</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              We'll create a sequence linked to this application. You'll then add email steps and pick recipients (we'll pre-filter contacts at <span className="font-medium">{app.company_name ?? "this company"}</span>).
-            </p>
-            <div>
-              <Label>Campaign name</Label>
-              <Input
-                value={campaignName}
-                onChange={(e) => setCampaignName(e.target.value)}
-                placeholder={`Outreach for ${app.role_title}${app.company_name ? ` at ${app.company_name}` : ""}`}
-                autoFocus
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCampaignOpen(false)}>Cancel</Button>
-            <Button onClick={startCampaign}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <StartOutreachWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        applicationId={app.id}
+        roleTitle={app.role_title}
+        companyName={app.company_name}
+        onCreated={handleWizardCreated}
+      />
     </div>
   );
 }

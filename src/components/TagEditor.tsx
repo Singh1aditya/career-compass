@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
-
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 interface Tag {
   id: string;

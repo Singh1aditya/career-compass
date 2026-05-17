@@ -35,6 +35,7 @@ import { LogInteractionDialog } from "@/components/LogInteractionDialog";
 import { NotesList } from "@/components/NotesList";
 import { FollowUpsList } from "@/components/FollowUpsList";
 import { TagEditor } from "@/components/TagEditor";
+import { AttachmentsList } from "@/components/AttachmentsList";
 
 const TYPES = ["recruiter", "founder", "referral", "colleague", "other"];
 
@@ -241,6 +242,7 @@ export function ContactDetailPage({ contactId }: Props) {
           </TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="followups">Follow-ups</TabsTrigger>
+          <TabsTrigger value="files">Files</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -390,6 +392,17 @@ export function ContactDetailPage({ contactId }: Props) {
           <Card>
             <CardContent className="p-4">
               <FollowUpsList contactId={contact.id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="files">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Files</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <AttachmentsList parent={{ contact_id: contactId }} />
             </CardContent>
           </Card>
         </TabsContent>

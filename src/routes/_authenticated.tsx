@@ -9,13 +9,17 @@ export const Route = createFileRoute("/_authenticated")({
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
+  "/insights": "Insights",
+  "/calendar": "Calendar",
   "/contacts": "Contacts",
   "/applications": "Applications",
   "/companies": "Companies",
   "/follow-ups": "Follow-ups",
   "/sequences": "Sequences",
+  "/quick-add": "Quick Add",
   "/import": "Import",
   "/settings": "Settings",
+  "/health": "System Health",
   "/search": "Search",
 };
 

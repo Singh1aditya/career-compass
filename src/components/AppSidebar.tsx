@@ -8,6 +8,9 @@ import {
   Send,
   Upload,
   Settings,
+  BarChart2,
+  CalendarDays,
+  Zap,
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,11 +27,14 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Insights", url: "/insights", icon: BarChart2 },
   { title: "Contacts", url: "/contacts", icon: Users },
   { title: "Applications", url: "/applications", icon: Briefcase },
   { title: "Companies", url: "/companies", icon: Building2 },
+  { title: "Calendar", url: "/calendar", icon: CalendarDays },
   { title: "Follow-ups", url: "/follow-ups", icon: Clock },
   { title: "Sequences", url: "/sequences", icon: Send },
+  { title: "Quick Add", url: "/quick-add", icon: Zap },
   { title: "Import", url: "/import", icon: Upload },
   { title: "Settings", url: "/settings", icon: Settings },
 ];

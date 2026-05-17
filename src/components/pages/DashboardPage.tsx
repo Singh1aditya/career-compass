@@ -16,6 +16,7 @@ import {
   Plus,
 } from "lucide-react";
 import { format, isToday, isPast, parseISO } from "date-fns";
+import { statusColors } from "@/lib/status";
 
 interface Stats {
   totalContacts: number;
@@ -109,16 +110,6 @@ export function DashboardPage() {
     { label: "Companies", value: stats.totalCompanies, icon: Building2, to: "/companies" },
     { label: "Pending Follow-ups", value: stats.pendingFollowUps, icon: Clock, to: "/follow-ups" },
   ];
-
-  const statusColors: Record<string, string> = {
-    wishlist: "bg-muted text-muted-foreground",
-    applied: "bg-primary/10 text-primary",
-    screening: "bg-warning/10 text-warning-foreground",
-    interviewing: "bg-chart-2/10 text-foreground",
-    offer: "bg-success/10 text-success",
-    rejected: "bg-destructive/10 text-destructive",
-    withdrawn: "bg-muted text-muted-foreground",
-  };
 
   const priorityColors: Record<string, string> = {
     high: "text-destructive",

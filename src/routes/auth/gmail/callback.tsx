@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -29,14 +28,20 @@ function GmailCallbackComponent() {
   const handleCallback = async () => {
     try {
       if (search.error) {
-        throw new Error(search.error || "Gmail authorization failed");
+        const msg = search.error === "access_denied"
+          ? "You denied Gmail access. Connect Gmail again to enable email sending."
+          : `Gmail authorization failed: ${search.error}`;
+        throw new Error(msg);
       }
 
       if (!search.code) {
         throw new Error("No authorization code received");
       }
 
-      // Call Edge Function to exchange code for tokens
+      // Pass the exact redirect_uri that was used to initiate the OAuth flow so
+      // the edge function can send it byte-for-byte to Google's token endpoint.
+      const redirectUri = `${window.location.origin}/auth/gmail/callback`;
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/gmail-exchange-code`, {
         method: "POST",
         headers: {
@@ -44,28 +49,16 @@ function GmailCallbackComponent() {
           "apikey": SUPABASE_ANON_KEY,
           "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ code: search.code }),
+        body: JSON.stringify({ code: search.code, redirect_uri: redirectUri }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to exchange authorization code");
-      }
 
       const data = await response.json();
 
-      // Store OAuth tokens in database
-      const { error: dbError } = await supabase.from("oauth_tokens").insert({
-        user_id: "00000000-0000-0000-0000-000000000000",
-        provider: "gmail",
-        access_token: data.access_token,
-        refresh_token: data.refresh_token,
-        expires_at: new Date(Date.now() + data.expires_in * 1000).toISOString(),
-        scope: data.scope,
-      });
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to exchange authorization code");
+      }
 
-      if (dbError) throw dbError;
-
-      toast.success("Gmail connected successfully!");
+      toast.success(data.email ? `Gmail connected: ${data.email}` : "Gmail connected successfully!");
       navigate({ to: "/settings" });
     } catch (error: any) {
       console.error("Gmail callback error:", error);

@@ -43,3 +43,6 @@ supabase/.branches/
 # Local one-off scripts (debug probes etc.)
 scripts/probe*.mjs
 scripts/probe*.ts
+
+# Claude Code local memory and settings — contains personal context
+.claude/

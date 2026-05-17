@@ -20,25 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Briefcase, Save, Send, Users } from "lucide-react";
+import { ArrowLeft, Briefcase, Save, Send, Users, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 import { LogInteractionDialog } from "@/components/LogInteractionDialog";
 import { NotesList } from "@/components/NotesList";
 import { FollowUpsList } from "@/components/FollowUpsList";
 import { StartOutreachWizard } from "@/components/StartOutreachWizard";
-
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
-const STATUSES = ["wishlist", "applied", "screening", "interviewing", "offer", "rejected", "withdrawn"];
-
-const statusColors: Record<string, string> = {
-  wishlist: "bg-muted text-muted-foreground",
-  applied: "bg-primary/10 text-primary",
-  screening: "bg-warning/10 text-warning-foreground",
-  interviewing: "bg-chart-2/10 text-foreground",
-  offer: "bg-success/10 text-success",
-  rejected: "bg-destructive/10 text-destructive",
-  withdrawn: "bg-muted text-muted-foreground",
-};
+import { AttachmentsList } from "@/components/AttachmentsList";
+import { ScheduleInterviewDialog } from "@/components/ScheduleInterviewDialog";
+import { DEFAULT_USER_ID } from "@/lib/constants";
+import { APPLICATION_STATUSES as STATUSES, statusColors } from "@/lib/status";
 
 interface Application {
   id: string;
@@ -88,6 +79,7 @@ export function ApplicationDetailPage({ applicationId }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Application>>({});
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   useEffect(() => { load(); }, [applicationId]);
 
@@ -205,6 +197,9 @@ export function ApplicationDetailPage({ applicationId }: Props) {
             </div>
             <div className="flex gap-2 shrink-0">
               <LogInteractionDialog applicationId={app.id} onLogged={load} />
+              <Button size="sm" variant="outline" onClick={() => setScheduleOpen(true)}>
+                <CalendarCheck className="h-3.5 w-3.5 mr-1" /> Schedule Interview
+              </Button>
               <Button size="sm" onClick={() => setWizardOpen(true)}>
                 <Send className="h-3.5 w-3.5 mr-1" /> Start Outreach Campaign
               </Button>
@@ -227,6 +222,7 @@ export function ApplicationDetailPage({ applicationId }: Props) {
           </TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="followups">Follow-ups</TabsTrigger>
+          <TabsTrigger value="files">Files</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -413,6 +409,14 @@ export function ApplicationDetailPage({ applicationId }: Props) {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="files">
+          <Card>
+            <CardContent className="p-4">
+              <AttachmentsList parent={{ application_id: app.id }} />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       <StartOutreachWizard
@@ -422,6 +426,14 @@ export function ApplicationDetailPage({ applicationId }: Props) {
         roleTitle={app.role_title}
         companyName={app.company_name}
         onCreated={handleWizardCreated}
+      />
+      <ScheduleInterviewDialog
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        applicationId={app.id}
+        roleTitle={app.role_title}
+        companyName={app.company_name}
+        onCreated={load}
       />
     </div>
   );

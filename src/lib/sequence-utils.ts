@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { renderTemplate as renderTemplateCore, loadSender } from "@/lib/templates";
 
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 // Synchronous wrapper for the existing API. For accurate signature rendering
 // at send time, the edge function reads sender settings from the DB directly.

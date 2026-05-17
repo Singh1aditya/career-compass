@@ -42,7 +42,7 @@ interface Application {
   company_name: string;
 }
 
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 export function SequencesPage() {
   const navigate = useNavigate();

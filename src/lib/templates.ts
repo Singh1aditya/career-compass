@@ -13,8 +13,7 @@
 //   {{my_role}}       — sender's role (from settings)
 
 import { supabase } from "@/integrations/supabase/client";
-
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 export interface TemplateContact {
   name: string;

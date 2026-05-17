@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddRecipientsDialog } from "@/components/AddRecipientsDialog";
 import { TemplatePreview } from "@/components/TemplatePreview";
 import { processPendingSends } from "@/lib/sequence-utils";
+import { AIComposeButton } from "@/components/AIComposeButton";
 
 interface Sequence {
   id: string;
@@ -60,7 +61,7 @@ interface Recipient {
   };
 }
 
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
   const navigate = useNavigate();
@@ -301,7 +302,30 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                     </p>
                   </div>
                   <div>
-                    <Label>Email Body</Label>
+                    <div className="flex items-center justify-between mb-1">
+                      <Label>Email Body</Label>
+                      <AIComposeButton
+                        kind="draft_email"
+                        context={{
+                          company: targetCompany ?? "",
+                          role: sequence?.name ?? "",
+                        }}
+                        onResult={(text) => {
+                          const lines = text.split("\n");
+                          const subjectLine = lines.find((l) => l.startsWith("Subject:"));
+                          const bodyStart = lines.findIndex((l) => l.trim() === "" && lines.indexOf(subjectLine ?? "") !== -1) + 1;
+                          if (subjectLine && !stepForm.template_subject) {
+                            setStepForm((f) => ({
+                              ...f,
+                              template_subject: subjectLine.replace(/^Subject:\s*/i, ""),
+                              template_body: lines.slice(bodyStart || 2).join("\n").trim() || text,
+                            }));
+                          } else {
+                            setStepForm((f) => ({ ...f, template_body: text }));
+                          }
+                        }}
+                      />
+                    </div>
                     <Textarea
                       value={stepForm.template_body}
                       onChange={(e) =>

@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Briefcase, Clock, Send } from "lucide-react";
+import { LayoutDashboard, Users, Briefcase, BarChart2, Clock } from "lucide-react";
 
 const tabs = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Contacts", url: "/contacts", icon: Users },
   { title: "Applications", url: "/applications", icon: Briefcase },
+  { title: "Insights", url: "/insights", icon: BarChart2 },
   { title: "Follow-ups", url: "/follow-ups", icon: Clock },
-  { title: "Sequences", url: "/sequences", icon: Send },
 ];
 
 export function MobileNav() {

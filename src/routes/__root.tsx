@@ -1,5 +1,7 @@
 import { Outlet, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Toaster } from "sonner";
+// Side-effect import: initialises Sentry when VITE_SENTRY_DSN is set.
+import "@/lib/sentry";
 
 import appCss from "../styles.css?url";
 

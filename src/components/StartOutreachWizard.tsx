@@ -43,8 +43,7 @@ import {
 import { toast } from "sonner";
 import { renderTemplate, loadSender, type TemplateSender } from "@/lib/templates";
 import { roleMatches, matchedTokens } from "@/lib/sequence-keywords";
-
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 interface Contact {
   id: string;

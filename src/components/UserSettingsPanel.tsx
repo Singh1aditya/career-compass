@@ -8,8 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { User, Save } from "lucide-react";
 import { toast } from "sonner";
 import { clearSenderCache } from "@/lib/templates";
-
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 interface Settings {
   display_name: string | null;

@@ -20,8 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 const TYPES = ["email", "call", "meeting", "linkedin", "other"];
 const DIRECTIONS = ["outbound", "inbound"];
 

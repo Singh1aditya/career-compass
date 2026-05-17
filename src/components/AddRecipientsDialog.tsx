@@ -30,7 +30,7 @@ interface AddRecipientsDialogProps {
   targetCompany?: string | null;
 }
 
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 const TYPE_GROUPS: Array<{ key: string; label: string }> = [
   { key: "recruiter", label: "Recruiters" },

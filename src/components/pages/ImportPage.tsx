@@ -27,7 +27,7 @@ import {
   type ContactPreview,
 } from "@/lib/csv-utils";
 
-const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 type ImportStep = "upload" | "mapping" | "preview" | "importing" | "complete";
 

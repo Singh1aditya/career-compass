@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -40,7 +41,10 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Trash2,
 } from "lucide-react";
+import { BulkActionBar } from "@/components/BulkActionBar";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 interface Contact {
   id: string;
@@ -81,6 +85,8 @@ export function ContactsPage() {
     contact_type: "other",
     notes: "",
   });
+  // Multi-select
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) loadContacts();
@@ -93,6 +99,7 @@ export function ContactsPage() {
       .eq("status", statusFilter)
       .order("created_at", { ascending: false });
     setContacts((data as Contact[]) ?? []);
+    setCheckedIds(new Set());
     setLoading(false);
   };
 
@@ -155,7 +162,7 @@ export function ContactsPage() {
     } else {
       const { error } = await supabase
         .from("contacts")
-        .insert({ ...form, user_id: user.id });
+        .insert({ ...form, user_id: DEFAULT_USER_ID });
       if (error) { toast.error(error.message); return; }
       toast.success("Contact added");
     }
@@ -168,6 +175,50 @@ export function ContactsPage() {
     const newStatus = contact.status === "active" ? "archived" : "active";
     await supabase.from("contacts").update({ status: newStatus }).eq("id", contact.id);
     toast.success(newStatus === "archived" ? "Contact archived" : "Contact restored");
+    loadContacts();
+  };
+
+  // --- Bulk helpers ---
+  const allFilteredIds = filtered.map((c) => c.id);
+  const allChecked =
+    allFilteredIds.length > 0 && allFilteredIds.every((id) => checkedIds.has(id));
+  const someChecked = allFilteredIds.some((id) => checkedIds.has(id));
+
+  const toggleRow = (id: string) => {
+    setCheckedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (allChecked) {
+      setCheckedIds(new Set());
+    } else {
+      setCheckedIds(new Set(allFilteredIds));
+    }
+  };
+
+  const bulkArchive = async () => {
+    const ids = Array.from(checkedIds);
+    const newStatus = statusFilter === "active" ? "archived" : "active";
+    const { error } = await supabase
+      .from("contacts")
+      .update({ status: newStatus })
+      .in("id", ids);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} contact${ids.length !== 1 ? "s" : ""} ${newStatus === "archived" ? "archived" : "restored"}`);
+    loadContacts();
+  };
+
+  const bulkDelete = async () => {
+    const ids = Array.from(checkedIds);
+    if (!window.confirm(`Delete ${ids.length} contact${ids.length !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+    const { error } = await supabase.from("contacts").delete().in("id", ids);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Deleted ${ids.length} contact${ids.length !== 1 ? "s" : ""}`);
     loadContacts();
   };
 
@@ -225,7 +276,7 @@ export function ContactsPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search contacts (name, email, phone, company, role, notes)..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+          <Input placeholder="Search contacts…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
         </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="Type" /></SelectTrigger>
@@ -254,81 +305,115 @@ export function ContactsPage() {
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <button onClick={() => toggleSort("name")} className="flex items-center gap-1 hover:text-foreground">
-                      Name <SortIcon k="name" />
-                    </button>
-                  </TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>
-                    <button onClick={() => toggleSort("company_name")} className="flex items-center gap-1 hover:text-foreground">
-                      Company <SortIcon k="company_name" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => toggleSort("role")} className="flex items-center gap-1 hover:text-foreground">
-                      Role <SortIcon k="role" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => toggleSort("contact_type")} className="flex items-center gap-1 hover:text-foreground">
-                      Type <SortIcon k="contact_type" />
-                    </button>
-                  </TableHead>
-                  <TableHead className="max-w-[200px]">Notes</TableHead>
-                  <TableHead>
-                    <button onClick={() => toggleSort("created_at")} className="flex items-center gap-1 hover:text-foreground">
-                      Created <SortIcon k="created_at" />
-                    </button>
-                  </TableHead>
-                  <TableHead className="w-[60px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((c) => (
-                  <TableRow
-                    key={c.id}
-                    className="cursor-pointer"
-                    onClick={() => navigate({ to: `/contacts/${c.id}` })}
-                  >
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{c.email || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{c.phone || "—"}</TableCell>
-                    <TableCell>{c.company_name || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{c.role || "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={`text-xs ${typeColors[c.contact_type]}`}>
-                        {c.contact_type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-muted-foreground text-xs">
-                      {c.notes || "—"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(c.created_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0"
-                        onClick={(e) => { e.stopPropagation(); toggleArchive(c); }}
-                      >
-                        {c.status === "active" ? <Archive className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />}
-                      </Button>
-                    </TableCell>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10 pl-4">
+                      <Checkbox
+                        checked={allChecked ? true : someChecked ? "indeterminate" : false}
+                        onCheckedChange={toggleAll}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <button type="button" onClick={() => toggleSort("name")} className="flex items-center gap-1 hover:text-foreground">
+                        Name <SortIcon k="name" />
+                      </button>
+                    </TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>
+                      <button type="button" onClick={() => toggleSort("company_name")} className="flex items-center gap-1 hover:text-foreground">
+                        Company <SortIcon k="company_name" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button type="button" onClick={() => toggleSort("role")} className="flex items-center gap-1 hover:text-foreground">
+                        Role <SortIcon k="role" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button type="button" onClick={() => toggleSort("contact_type")} className="flex items-center gap-1 hover:text-foreground">
+                        Type <SortIcon k="contact_type" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="max-w-[200px]">Notes</TableHead>
+                    <TableHead>
+                      <button type="button" onClick={() => toggleSort("created_at")} className="flex items-center gap-1 hover:text-foreground">
+                        Created <SortIcon k="created_at" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[60px]"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((c) => (
+                    <TableRow
+                      key={c.id}
+                      className="cursor-pointer"
+                      data-selected={checkedIds.has(c.id)}
+                      onClick={() => navigate({ to: `/contacts/${c.id}` })}
+                    >
+                      <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={checkedIds.has(c.id)}
+                          onCheckedChange={() => toggleRow(c.id)}
+                          aria-label={`Select ${c.name}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{c.name}</TableCell>
+                      <TableCell className="text-muted-foreground">{c.email || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{c.phone || "—"}</TableCell>
+                      <TableCell>{c.company_name || "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{c.role || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={`text-xs ${typeColors[c.contact_type]}`}>
+                          {c.contact_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate text-muted-foreground text-xs">
+                        {c.notes || "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                        {new Date(c.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={(e) => { e.stopPropagation(); toggleArchive(c); }}
+                        >
+                          {c.status === "active" ? <Archive className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>
       )}
+
+      <BulkActionBar
+        selectedCount={checkedIds.size}
+        onClear={() => setCheckedIds(new Set())}
+        actions={[
+          {
+            label: statusFilter === "active" ? "Archive selected" : "Restore selected",
+            icon: statusFilter === "active" ? <Archive className="h-3 w-3" /> : <RotateCcw className="h-3 w-3" />,
+            variant: "outline",
+            onClick: bulkArchive,
+          },
+          {
+            label: "Delete selected",
+            icon: <Trash2 className="h-3 w-3" />,
+            variant: "destructive",
+            onClick: bulkDelete,
+          },
+        ]}
+      />
     </div>
   );
 }

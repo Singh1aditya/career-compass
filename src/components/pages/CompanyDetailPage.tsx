@@ -24,6 +24,7 @@ import {
 import { ArrowLeft, Building2, Globe, Save, Star, Briefcase, Users } from "lucide-react";
 import { toast } from "sonner";
 import { NotesList } from "@/components/NotesList";
+import { AttachmentsList } from "@/components/AttachmentsList";
 
 const STAGES = ["startup", "growth", "enterprise"];
 
@@ -188,6 +189,7 @@ export function CompanyDetailPage({ companyId }: Props) {
             Contacts {contacts.length > 0 && `(${contacts.length})`}
           </TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="files">Files</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -333,6 +335,17 @@ export function CompanyDetailPage({ companyId }: Props) {
             <CardContent className="p-4">
               <NotesList contactId={undefined} applicationId={undefined} />
               <p className="text-xs text-muted-foreground mt-2">Note: notes table doesn't currently link to companies; use the Notes field in Overview for company-level notes.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="files">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Files</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <AttachmentsList parent={{ company_id: companyId }} />
             </CardContent>
           </Card>
         </TabsContent>

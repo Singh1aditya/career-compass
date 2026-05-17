@@ -1,6 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_USER_ID } from "@/lib/constants";
 
+// Tables added by local migrations not yet applied to the live DB — cast until migrations run.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
+
 const BUCKET = "crm-files";
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = [
@@ -45,7 +49,7 @@ export async function uploadAttachment(
 
   if (uploadError) return { data: null, error: uploadError.message };
 
-  const { data, error: dbError } = await supabase
+  const { data, error: dbError } = await db
     .from("attachments")
     .insert({
       user_id: DEFAULT_USER_ID,
@@ -75,7 +79,7 @@ export async function getSignedUrl(path: string): Promise<string | null> {
 }
 
 export async function deleteAttachment(id: string, path: string): Promise<string | null> {
-  const { error: dbError } = await supabase.from("attachments").delete().eq("id", id);
+  const { error: dbError } = await db.from("attachments").delete().eq("id", id);
   if (dbError) return dbError.message;
   await supabase.storage.from(BUCKET).remove([path]);
   return null;
@@ -86,7 +90,7 @@ export async function fetchAttachments(
 ): Promise<Attachment[]> {
   const key = Object.keys(parent)[0] as keyof typeof parent;
   const val = parent[key];
-  const { data } = await supabase
+  const { data } = await db
     .from("attachments")
     .select("id, filename, mime_type, size_bytes, kind, created_at, storage_path")
     .eq(key, val)

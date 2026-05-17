@@ -30,6 +30,7 @@ import { AttachmentsList } from "@/components/AttachmentsList";
 import { ScheduleInterviewDialog } from "@/components/ScheduleInterviewDialog";
 import { DEFAULT_USER_ID } from "@/lib/constants";
 import { APPLICATION_STATUSES as STATUSES, statusColors } from "@/lib/status";
+import { AIComposeButton } from "@/components/AIComposeButton";
 
 interface Application {
   id: string;
@@ -195,7 +196,13 @@ export function ApplicationDetailPage({ applicationId }: Props) {
                 {app.resume_version && <Badge variant="outline" className="text-xs">Resume {app.resume_version}</Badge>}
               </div>
             </div>
-            <div className="flex gap-2 shrink-0">
+            <div className="flex gap-2 shrink-0 flex-wrap">
+              <AIComposeButton
+                kind="draft_email"
+                context={{ role: app.role_title ?? "", company: app.company_name ?? "" }}
+                size="sm"
+                variant="outline"
+              />
               <LogInteractionDialog applicationId={app.id} onLogged={load} />
               <Button size="sm" variant="outline" onClick={() => setScheduleOpen(true)}>
                 <CalendarCheck className="h-3.5 w-3.5 mr-1" /> Schedule Interview

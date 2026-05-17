@@ -9,7 +9,11 @@ import { Mail, Lock, Bell, Clock, CheckCircle, Bot, Sparkles } from "lucide-reac
 import { toast } from "sonner";
 import { EmailScanStatus } from "@/components/EmailScanStatus";
 import { UserSettingsPanel } from "@/components/UserSettingsPanel";
+import { DigestPreview } from "@/components/DigestPreview";
 import { DEFAULT_USER_ID } from "@/lib/constants";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 
 interface AIUsage {
   totalRuns: number;
@@ -31,6 +35,7 @@ const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({
 export function SettingsPage() {
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
+  const [gmailHasCalendarScope, setGmailHasCalendarScope] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reminderSettings, setReminderSettings] = useState<ReminderSettings>({
     digest_enabled: false,
@@ -51,12 +56,13 @@ export function SettingsPage() {
     try {
       const { data } = await supabase
         .from("oauth_tokens")
-        .select("email")
+        .select("email, scope")
         .eq("user_id", DEFAULT_USER_ID)
         .eq("provider", "gmail")
         .maybeSingle();
       setGmailConnected(!!data);
-      setGmailEmail(data?.email ?? null);
+      setGmailEmail((data as any)?.email ?? null);
+      setGmailHasCalendarScope(((data as any)?.scope ?? "").includes("calendar.events"));
     } catch {
       setGmailConnected(false);
     } finally {
@@ -65,7 +71,7 @@ export function SettingsPage() {
   };
 
   const loadReminderSettings = async () => {
-    const { data } = await supabase
+    const { data } = await db
       .from("user_settings")
       .select("digest_enabled, digest_hour, auto_followups_enabled")
       .eq("user_id", DEFAULT_USER_ID)
@@ -81,7 +87,7 @@ export function SettingsPage() {
 
   const saveReminderSettings = async () => {
     setReminderSaving(true);
-    const { error } = await supabase.from("user_settings").upsert({
+    const { error } = await db.from("user_settings").upsert({
       user_id: DEFAULT_USER_ID,
       ...reminderSettings,
       updated_at: new Date().toISOString(),
@@ -124,7 +130,7 @@ export function SettingsPage() {
   const loadAiUsage = async () => {
     const since = new Date();
     since.setDate(1); // start of current month
-    const { data } = await supabase
+    const { data } = await db
       .from("ai_runs")
       .select("kind, tokens_in, tokens_out, cost_usd")
       .eq("user_id", DEFAULT_USER_ID)
@@ -157,6 +163,7 @@ export function SettingsPage() {
     const scope = [
       "https://www.googleapis.com/auth/gmail.send",
       "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/calendar.events",
     ].join(" ");
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
     window.location.href = authUrl;
@@ -213,6 +220,15 @@ export function SettingsPage() {
                     <p className="text-sm font-medium text-green-900">Gmail connected</p>
                     <p className="text-xs text-green-700 mt-1">{gmailEmail || "Ready to send emails"}</p>
                   </div>
+                  {!gmailHasCalendarScope && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
+                      <p className="text-sm font-medium text-amber-900">Google Calendar not authorized</p>
+                      <p className="text-xs text-amber-700">Re-connect Gmail to enable interview scheduling sync with Google Calendar.</p>
+                      <Button size="sm" variant="outline" onClick={handleConnectGmail}>
+                        Re-connect to add Calendar access
+                      </Button>
+                    </div>
+                  )}
                   <Button variant="destructive" onClick={handleDisconnectGmail}>Disconnect Gmail</Button>
                 </div>
               ) : (
@@ -223,7 +239,7 @@ export function SettingsPage() {
                   <Button onClick={handleConnectGmail} className="w-full bg-blue-600 hover:bg-blue-700">
                     <Mail className="h-4 w-4 mr-2" /> Connect Gmail
                   </Button>
-                  <p className="text-xs text-muted-foreground">Requires send and read-only access.</p>
+                  <p className="text-xs text-muted-foreground">Requires Gmail send/read + Google Calendar access.</p>
                 </div>
               )
             )}
@@ -299,6 +315,7 @@ export function SettingsPage() {
               <Button variant="outline" size="sm" onClick={runDigestNow} disabled={digestRunning}>
                 {digestRunning ? "Sending..." : "Send digest now"}
               </Button>
+              <DigestPreview />
               <Button variant="outline" size="sm" onClick={runAutoFollowups}>
                 Generate follow-ups now
               </Button>

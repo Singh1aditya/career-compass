@@ -2,6 +2,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_USER_ID } from "@/lib/constants";
 import { format, subDays, startOfWeek, getISOWeek, getISOWeekYear } from "date-fns";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
+
 // Returns counts per status across all applications
 export async function fetchFunnelData(): Promise<{ status: string; count: number }[]> {
   const { data, error } = await supabase
@@ -49,7 +52,7 @@ export async function fetchResponseRate(
 
 // Returns median days in each status (from application_status_history)
 export async function fetchTimeInStage(): Promise<{ status: string; medianDays: number }[]> {
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("application_status_history")
     .select("application_id, to_status, changed_at")
     .order("application_id")

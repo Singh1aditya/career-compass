@@ -110,7 +110,7 @@ export async function processPendingSends() {
         if (!contact || !contact.email) continue;
 
         // Render template
-        const subject = renderTemplate(step.template_subject, contact as any);
+        const subject = renderTemplate(step.template_subject ?? "", contact as any);
         const body = renderTemplate(step.template_body, contact as any);
 
         // Send email (will be delegated to Edge Function when Gmail is connected)

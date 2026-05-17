@@ -19,10 +19,9 @@ import { format, isToday, isPast, isFuture, parseISO, addDays } from "date-fns";
 
 interface FollowUp {
   id: string;
-  description: string;
+  description: string | null;
   due_date: string;
   status: string;
-  priority: string;
   contact_id: string | null;
   application_id: string | null;
   created_at: string;
@@ -37,7 +36,6 @@ export function FollowUpsPage() {
   const [form, setForm] = useState({
     description: "",
     due_date: format(new Date(), "yyyy-MM-dd"),
-    priority: "medium",
   });
 
   useEffect(() => { if (user) loadFollowUps(); }, [user, statusFilter]);
@@ -59,7 +57,7 @@ export function FollowUpsPage() {
     if (error) { toast.error(error.message); return; }
     toast.success("Follow-up added");
     setDialogOpen(false);
-    setForm({ description: "", due_date: format(new Date(), "yyyy-MM-dd"), priority: "medium" });
+    setForm({ description: "", due_date: format(new Date(), "yyyy-MM-dd") });
     loadFollowUps();
   };
 
@@ -84,12 +82,6 @@ export function FollowUpsPage() {
   const upcoming = followUps.filter((f) => isFuture(parseISO(f.due_date)) && !isToday(parseISO(f.due_date)) && f.status === "pending");
   const completed = followUps.filter((f) => f.status !== "pending");
 
-  const priorityColors: Record<string, string> = {
-    high: "text-destructive",
-    medium: "text-warning-foreground",
-    low: "text-muted-foreground",
-  };
-
   const renderGroup = (title: string, items: FollowUp[], icon: React.ReactNode) => {
     if (items.length === 0) return null;
     return (
@@ -106,7 +98,6 @@ export function FollowUpsPage() {
                 <p className="text-sm truncate">{f.description}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-muted-foreground">{format(parseISO(f.due_date), "MMM d")}</span>
-                  <Badge variant="outline" className={`text-xs ${priorityColors[f.priority]}`}>{f.priority}</Badge>
                 </div>
               </div>
               {f.status === "pending" && (
@@ -153,17 +144,6 @@ export function FollowUpsPage() {
                 <div><Label>Description *</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Follow up with Jane about the referral" /></div>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Due Date</Label><Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} /></div>
-                  <div>
-                    <Label>Priority</Label>
-                    <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="low">Low</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
                 <Button onClick={handleSave} className="w-full">Add Follow-up</Button>
               </div>

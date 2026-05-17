@@ -22,9 +22,9 @@ import { renderTemplate } from "@/lib/templates";
 interface Contact {
   id: string;
   name: string;
-  email: string;
-  company_name?: string;
-  role?: string;
+  email: string | null;
+  company_name: string | null;
+  role: string | null;
 }
 
 interface TemplatePreviewProps {

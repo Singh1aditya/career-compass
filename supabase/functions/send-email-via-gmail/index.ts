@@ -28,7 +28,7 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+    import { DEFAULT_USER_ID } from "../_shared/constants.ts";
 
     // Get user's Gmail OAuth token
     const { data: oauthToken, error: tokenError } = await supabase

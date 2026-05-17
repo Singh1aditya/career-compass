@@ -42,6 +42,8 @@ import {
   ArrowDown,
   ArrowUpDown,
   Trash2,
+  Tag,
+  ListPlus,
 } from "lucide-react";
 import { BulkActionBar } from "@/components/BulkActionBar";
 import { DEFAULT_USER_ID } from "@/lib/constants";
@@ -87,6 +89,11 @@ export function ContactsPage() {
   });
   // Multi-select
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [bulkTagOpen, setBulkTagOpen] = useState(false);
+  const [bulkTagInput, setBulkTagInput] = useState("");
+  const [bulkEnrollOpen, setBulkEnrollOpen] = useState(false);
+  const [sequences, setSequences] = useState<{ id: string; name: string }[]>([]);
+  const [bulkSequenceId, setBulkSequenceId] = useState("");
 
   useEffect(() => {
     if (user) loadContacts();
@@ -220,6 +227,57 @@ export function ContactsPage() {
     if (error) { toast.error(error.message); return; }
     toast.success(`Deleted ${ids.length} contact${ids.length !== 1 ? "s" : ""}`);
     loadContacts();
+  };
+
+  const loadSequences = async () => {
+    const { data } = await supabase
+      .from("sequences")
+      .select("id, name")
+      .eq("user_id", DEFAULT_USER_ID)
+      .order("created_at", { ascending: false });
+    setSequences((data as { id: string; name: string }[]) ?? []);
+  };
+
+  const bulkAddTag = async () => {
+    const tagName = bulkTagInput.trim().toLowerCase();
+    if (!tagName) return;
+    const ids = Array.from(checkedIds);
+
+    // Upsert the tag row (name is unique per user)
+    const { data: tagRow, error: tagErr } = await supabase
+      .from("tags")
+      .upsert({ name: tagName, user_id: DEFAULT_USER_ID }, { onConflict: "name,user_id" })
+      .select("id")
+      .single();
+    if (tagErr) { toast.error(tagErr.message); return; }
+
+    // Link tag to each selected contact
+    const rows = ids.map((contact_id) => ({ contact_id, tag_id: tagRow.id }));
+    const { error } = await supabase
+      .from("contact_tags")
+      .upsert(rows, { onConflict: "contact_id,tag_id" });
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Tag "${tagName}" added to ${ids.length} contact${ids.length !== 1 ? "s" : ""}`);
+    setBulkTagOpen(false);
+    setBulkTagInput("");
+  };
+
+  const bulkEnrollInSequence = async () => {
+    if (!bulkSequenceId) return;
+    const ids = Array.from(checkedIds);
+    const rows = ids.map((contact_id) => ({
+      sequence_id: bulkSequenceId,
+      contact_id,
+      user_id: DEFAULT_USER_ID,
+      state: "waiting",
+    }));
+    const { error } = await supabase
+      .from("sequence_recipients")
+      .upsert(rows, { onConflict: "sequence_id,contact_id" });
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Enrolled ${ids.length} contact${ids.length !== 1 ? "s" : ""} in sequence`);
+    setBulkEnrollOpen(false);
+    setBulkSequenceId("");
   };
 
   const typeColors: Record<string, string> = {
@@ -396,18 +454,63 @@ export function ContactsPage() {
         </Card>
       )}
 
+      {/* Bulk tag dialog */}
+      <Dialog open={bulkTagOpen} onOpenChange={setBulkTagOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Add tag to {checkedIds.size} contacts</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <Input
+              placeholder="e.g. recruiter, hot-lead, bay-area"
+              value={bulkTagInput}
+              onChange={(e) => setBulkTagInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && bulkAddTag()}
+              autoFocus
+            />
+            <Button className="w-full" onClick={bulkAddTag} disabled={!bulkTagInput.trim()}>Add tag</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk enroll dialog */}
+      <Dialog open={bulkEnrollOpen} onOpenChange={setBulkEnrollOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Enroll {checkedIds.size} contacts in sequence</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <Select value={bulkSequenceId} onValueChange={setBulkSequenceId}>
+              <SelectTrigger><SelectValue placeholder="Choose sequence…" /></SelectTrigger>
+              <SelectContent>
+                {sequences.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button className="w-full" onClick={bulkEnrollInSequence} disabled={!bulkSequenceId}>Enroll</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <BulkActionBar
         selectedCount={checkedIds.size}
         onClear={() => setCheckedIds(new Set())}
         actions={[
           {
-            label: statusFilter === "active" ? "Archive selected" : "Restore selected",
+            label: statusFilter === "active" ? "Archive" : "Restore",
             icon: statusFilter === "active" ? <Archive className="h-3 w-3" /> : <RotateCcw className="h-3 w-3" />,
             variant: "outline",
             onClick: bulkArchive,
           },
           {
-            label: "Delete selected",
+            label: "Add tag",
+            icon: <Tag className="h-3 w-3" />,
+            variant: "outline",
+            onClick: () => setBulkTagOpen(true),
+          },
+          {
+            label: "Enroll in sequence",
+            icon: <ListPlus className="h-3 w-3" />,
+            variant: "outline",
+            onClick: () => { loadSequences(); setBulkEnrollOpen(true); },
+          },
+          {
+            label: "Delete",
             icon: <Trash2 className="h-3 w-3" />,
             variant: "destructive",
             onClick: bulkDelete,

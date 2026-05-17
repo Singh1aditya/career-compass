@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import type { User } from "@supabase/supabase-js";
+import { DEFAULT_USER_ID } from "@/lib/constants";
 
 const DEFAULT_USER: User = {
-  id: "00000000-0000-0000-0000-000000000000",
+  id: DEFAULT_USER_ID,
   aud: "authenticated",
   role: "authenticated",
   email: "personal@carecrm.local",

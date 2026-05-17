@@ -4,7 +4,7 @@ export interface SearchResults {
   contacts: Array<{ id: string; name: string; email: string | null; company_name: string | null; contact_type: string }>;
   applications: Array<{ id: string; role_title: string; company_name: string | null; status: string }>;
   companies: Array<{ id: string; name: string; industry: string | null }>;
-  notes: Array<{ id: string; content: string; contact_id: string | null; company_id: string | null; application_id: string | null }>;
+  notes: Array<{ id: string; content: string; contact_id: string | null; application_id: string | null }>;
 }
 
 export const emptyResults: SearchResults = {
@@ -37,7 +37,7 @@ export async function searchAll(query: string, limit = 10): Promise<SearchResult
       .limit(limit),
     supabase
       .from("notes")
-      .select("id, content, contact_id, company_id, application_id")
+      .select("id, content, contact_id, application_id")
       .ilike("content", pattern)
       .limit(limit),
   ]);

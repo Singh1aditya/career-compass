@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Search, Briefcase, List, LayoutGrid, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Search, Briefcase, List, LayoutGrid, Trash2, RefreshCw, Archive } from "lucide-react";
 import { ApplicationsKanban } from "@/components/ApplicationsKanban";
 import { BulkActionBar } from "@/components/BulkActionBar";
 import { APPLICATION_STATUSES as statuses, statusColors } from "@/lib/status";
@@ -139,6 +139,17 @@ export function ApplicationsPage() {
     const { error } = await supabase.from("applications").delete().in("id", ids);
     if (error) { toast.error(error.message); return; }
     toast.success(`Deleted ${ids.length} application${ids.length !== 1 ? "s" : ""}`);
+    loadApps();
+  };
+
+  const bulkArchive = async () => {
+    const ids = Array.from(checkedIds);
+    const { error } = await supabase
+      .from("applications")
+      .update({ status: "archived", updated_at: new Date().toISOString() })
+      .in("id", ids);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} application${ids.length !== 1 ? "s" : ""} archived`);
     loadApps();
   };
 
@@ -300,6 +311,12 @@ export function ApplicationsPage() {
             icon: <RefreshCw className="h-3 w-3" />,
             variant: "outline",
             onClick: () => setBulkStatusDialogOpen(true),
+          },
+          {
+            label: "Archive",
+            icon: <Archive className="h-3 w-3" />,
+            variant: "outline",
+            onClick: bulkArchive,
           },
           {
             label: "Delete",

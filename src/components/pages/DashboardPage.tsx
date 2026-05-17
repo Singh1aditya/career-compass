@@ -28,9 +28,8 @@ interface Stats {
 
 interface FollowUp {
   id: string;
-  description: string;
+  description: string | null;
   due_date: string;
-  priority: string;
   status: string;
   contact_id: string | null;
   application_id: string | null;
@@ -111,11 +110,6 @@ export function DashboardPage() {
     { label: "Pending Follow-ups", value: stats.pendingFollowUps, icon: Clock, to: "/follow-ups" },
   ];
 
-  const priorityColors: Record<string, string> = {
-    high: "text-destructive",
-    medium: "text-warning-foreground",
-    low: "text-muted-foreground",
-  };
 
   if (loading) {
     return (
@@ -223,7 +217,7 @@ export function DashboardPage() {
                           {overdue ? (
                             <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
                           ) : (
-                            <Clock className={`h-3.5 w-3.5 shrink-0 ${priorityColors[fu.priority]}`} />
+                            <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                           )}
                           <p className="text-sm truncate">{fu.description}</p>
                         </div>

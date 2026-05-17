@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_USER_ID } from "@/lib/constants";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 import {
   Dialog,
   DialogContent,
@@ -95,7 +98,7 @@ export function ScheduleInterviewDialog({
       notes: form.notes || null,
     };
 
-    const { data, error } = await supabase.from("events").insert(payload).select().single();
+    const { data, error } = await db.from("events").insert(payload).select().single();
 
     if (error) {
       toast.error(error.message);

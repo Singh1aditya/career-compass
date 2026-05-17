@@ -35,7 +35,7 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000000";
+    import { DEFAULT_USER_ID } from "../_shared/constants.ts";
 
     await log(supabase, "info", "process-pending-sends", "tick start");
 

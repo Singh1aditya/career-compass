@@ -178,8 +178,6 @@ export function GlobalSearch({ collapsed = false }: { collapsed?: boolean } = {}
                   ? `/contacts/${n.contact_id}`
                   : n.application_id
                   ? `/applications/${n.application_id}`
-                  : n.company_id
-                  ? `/companies/${n.company_id}`
                   : "/search";
                 return (
                   <button

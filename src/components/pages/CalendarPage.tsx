@@ -4,6 +4,9 @@ import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { supabase } from "@/integrations/supabase/client";
 import { DEFAULT_USER_ID } from "@/lib/constants";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const db = supabase as any;
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,7 +62,8 @@ export function CalendarPage() {
     const from = startOfMonth(month).toISOString();
     const to = endOfMonth(addMonths(month, 0)).toISOString();
 
-    const { data, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
       .from("events")
       .select("*, applications(role_title, company_name)")
       .eq("user_id", DEFAULT_USER_ID)
@@ -86,7 +90,7 @@ export function CalendarPage() {
         // non-fatal
       }
     }
-    const { error } = await supabase.from("events").delete().eq("id", ev.id);
+    const { error } = await db.from("events").delete().eq("id", ev.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Event deleted");
     setEvents((prev) => prev.filter((e) => e.id !== ev.id));

@@ -8,12 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -68,7 +63,9 @@ export function CompanyDetailPage({ companyId }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Company>>({});
 
-  useEffect(() => { load(); }, [companyId]);
+  useEffect(() => {
+    load();
+  }, [companyId]);
 
   const load = async () => {
     setLoading(true);
@@ -119,7 +116,10 @@ export function CompanyDetailPage({ companyId }: Props) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", companyId);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Company updated");
     setEditing(false);
     load();
@@ -162,17 +162,32 @@ export function CompanyDetailPage({ companyId }: Props) {
                 {company.watchlist && <Star className="h-4 w-4 text-warning fill-warning" />}
               </div>
               <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm text-muted-foreground">
-                {company.industry && <Badge variant="secondary" className="text-xs">{company.industry}</Badge>}
-                {company.stage && <Badge variant="outline" className="text-xs">{company.stage}</Badge>}
+                {company.industry && (
+                  <Badge variant="secondary" className="text-xs">
+                    {company.industry}
+                  </Badge>
+                )}
+                {company.stage && (
+                  <Badge variant="outline" className="text-xs">
+                    {company.stage}
+                  </Badge>
+                )}
                 {company.website && (
-                  <a href={`https://${company.website.replace(/^https?:\/\//, "")}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:underline">
+                  <a
+                    href={`https://${company.website.replace(/^https?:\/\//, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 hover:underline"
+                  >
                     <Globe className="h-3 w-3" /> {company.website}
                   </a>
                 )}
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={toggleWatchlist}>
-              <Star className={`h-3.5 w-3.5 mr-1 ${company.watchlist ? "text-warning fill-warning" : ""}`} />
+              <Star
+                className={`h-3.5 w-3.5 mr-1 ${company.watchlist ? "text-warning fill-warning" : ""}`}
+              />
               {company.watchlist ? "Unwatch" : "Watch"}
             </Button>
           </div>
@@ -197,10 +212,19 @@ export function CompanyDetailPage({ companyId }: Props) {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-base">Details</CardTitle>
               {!editing ? (
-                <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>
+                <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                  Edit
+                </Button>
               ) : (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setForm(company); }}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditing(false);
+                      setForm(company);
+                    }}
+                  >
                     Cancel
                   </Button>
                   <Button size="sm" onClick={handleSave}>
@@ -229,38 +253,67 @@ export function CompanyDetailPage({ companyId }: Props) {
                 <div className="space-y-3">
                   <div>
                     <Label>Name *</Label>
-                    <Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                    <Input
+                      value={form.name ?? ""}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label>Industry</Label>
-                      <Input value={form.industry ?? ""} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
+                      <Input
+                        value={form.industry ?? ""}
+                        onChange={(e) => setForm({ ...form, industry: e.target.value })}
+                      />
                     </div>
                     <div>
                       <Label>Stage</Label>
-                      <Select value={form.stage ?? ""} onValueChange={(v) => setForm({ ...form, stage: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      <Select
+                        value={form.stage ?? ""}
+                        onValueChange={(v) => setForm({ ...form, stage: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
-                          {STAGES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          {STAGES.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div>
                     <Label>Website</Label>
-                    <Input value={form.website ?? ""} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="example.com" />
+                    <Input
+                      value={form.website ?? ""}
+                      onChange={(e) => setForm({ ...form, website: e.target.value })}
+                      placeholder="example.com"
+                    />
                   </div>
                   <div>
                     <Label>Hiring signals</Label>
-                    <Input value={form.hiring_signals ?? ""} onChange={(e) => setForm({ ...form, hiring_signals: e.target.value })} />
+                    <Input
+                      value={form.hiring_signals ?? ""}
+                      onChange={(e) => setForm({ ...form, hiring_signals: e.target.value })}
+                    />
                   </div>
                   <div className="flex items-center gap-2">
-                    <Switch checked={form.watchlist ?? false} onCheckedChange={(v) => setForm({ ...form, watchlist: v })} />
+                    <Switch
+                      checked={form.watchlist ?? false}
+                      onCheckedChange={(v) => setForm({ ...form, watchlist: v })}
+                    />
                     <Label>Add to watchlist</Label>
                   </div>
                   <div>
                     <Label>Notes</Label>
-                    <Textarea value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={4} />
+                    <Textarea
+                      value={form.notes ?? ""}
+                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                      rows={4}
+                    />
                   </div>
                 </div>
               )}
@@ -290,7 +343,9 @@ export function CompanyDetailPage({ companyId }: Props) {
                           <p className="text-xs text-muted-foreground">Applied {a.applied_date}</p>
                         )}
                       </div>
-                      <Badge variant="secondary" className="text-xs">{a.status}</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {a.status}
+                      </Badge>
                     </CardContent>
                   </Card>
                 ))
@@ -321,7 +376,9 @@ export function CompanyDetailPage({ companyId }: Props) {
                           {[c.role, c.email].filter(Boolean).join(" · ")}
                         </p>
                       </div>
-                      <Badge variant="secondary" className="text-xs">{c.contact_type}</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {c.contact_type}
+                      </Badge>
                     </CardContent>
                   </Card>
                 ))
@@ -334,7 +391,10 @@ export function CompanyDetailPage({ companyId }: Props) {
           <Card>
             <CardContent className="p-4">
               <NotesList contactId={undefined} applicationId={undefined} />
-              <p className="text-xs text-muted-foreground mt-2">Note: notes table doesn't currently link to companies; use the Notes field in Overview for company-level notes.</p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Note: notes table doesn't currently link to companies; use the Notes field in
+                Overview for company-level notes.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

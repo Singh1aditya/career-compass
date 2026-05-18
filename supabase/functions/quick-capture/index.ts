@@ -37,7 +37,7 @@ serve(async (req: Request) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
   let payload: CapturePayload;
@@ -61,7 +61,8 @@ serve(async (req: Request) => {
         const msg = await client.messages.create({
           model: "claude-haiku-4-5",
           max_tokens: 256,
-          system: "Extract job details from the text. Respond with JSON only: {role_title, company_name, location, source}. Use null for unknown fields.",
+          system:
+            "Extract job details from the text. Respond with JSON only: {role_title, company_name, location, source}. Use null for unknown fields.",
           messages: [
             {
               role: "user",
@@ -97,7 +98,15 @@ serve(async (req: Request) => {
     try {
       const hostname = new URL(url).hostname.replace(/^www\./, "");
       // Strip known job board domains
-      const jobBoards = ["linkedin.com", "indeed.com", "glassdoor.com", "greenhouse.io", "lever.co", "ashbyhq.com", "workday.com"];
+      const jobBoards = [
+        "linkedin.com",
+        "indeed.com",
+        "glassdoor.com",
+        "greenhouse.io",
+        "lever.co",
+        "ashbyhq.com",
+        "workday.com",
+      ];
       if (!jobBoards.some((b) => hostname.includes(b))) {
         company_name = hostname.split(".")[0];
         company_name = company_name.charAt(0).toUpperCase() + company_name.slice(1);
@@ -138,14 +147,15 @@ serve(async (req: Request) => {
       company_id,
       status: "wishlist",
       source: source ?? (url ? new URL(url).hostname.replace(/^www\./, "") : null),
-      notes: [
-        notes ?? "",
-        url ? `Source URL: ${url}` : "",
-        jd_text ? `\n---\n${jd_text.slice(0, 2000)}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n")
-        .trim() || null,
+      notes:
+        [
+          notes ?? "",
+          url ? `Source URL: ${url}` : "",
+          jd_text ? `\n---\n${jd_text.slice(0, 2000)}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n")
+          .trim() || null,
     })
     .select()
     .single();
@@ -159,6 +169,6 @@ serve(async (req: Request) => {
 
   return new Response(
     JSON.stringify({ ok: true, application_id: application.id, role_title, company_name }),
-    { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });

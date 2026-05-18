@@ -11,6 +11,7 @@ Running history of work sessions. Newest entries at the top.
 **Created** this `WORKLOG.md` and a `.claude/commands/log.md` slash command (`/log`) that appends a session summary here automatically.
 
 **Gmail auth fixed** (4 bugs):
+
 - `gmail-exchange-code` edge function: fetches Gmail address via userinfo API, persists tokens server-side using service role key (tokens no longer travel through browser), takes `redirect_uri` from the request so it's byte-for-byte identical to what Google expects.
 - `callback.tsx`: removed client-side DB write entirely (edge function owns it now), passes `redirect_uri` in request body, surfaces real error messages, shows connected email in success toast.
 - `SettingsPage.tsx`: switched to `maybeSingle()` (avoids PGRST116 error on empty token table), removed unused `Badge`/`XCircle` imports, fixed stale GMAIL_SETUP.md reference in error toast.

@@ -33,11 +33,7 @@ interface TemplatePreviewProps {
   recipientId?: string;
 }
 
-export function TemplatePreview({
-  subject,
-  body,
-  recipientId,
-}: TemplatePreviewProps) {
+export function TemplatePreview({ subject, body, recipientId }: TemplatePreviewProps) {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(false);
@@ -111,18 +107,14 @@ export function TemplatePreview({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground mb-1">
-                      SUBJECT
-                    </p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">SUBJECT</p>
                     <p className="bg-muted p-3 rounded text-sm font-medium break-words">
                       {renderedSubject || "[Empty subject]"}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground mb-1">
-                      BODY
-                    </p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">BODY</p>
                     <div className="bg-muted p-4 rounded text-sm whitespace-pre-wrap break-words font-mono text-xs leading-relaxed min-h-[200px] max-h-[400px] overflow-y-auto">
                       {renderedBody || "[Empty body]"}
                     </div>
@@ -132,16 +124,31 @@ export function TemplatePreview({
             )}
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-xs font-medium text-blue-900 mb-2">
-                Available Variables:
-              </p>
+              <p className="text-xs font-medium text-blue-900 mb-2">Available Variables:</p>
               <ul className="text-xs text-blue-800 space-y-1 font-mono">
-                <li><code>{"{{first_name}}"}</code> — <span className="font-normal">Contact's first name</span></li>
-                <li><code>{"{{full_name}}"}</code> — <span className="font-normal">Contact's full name</span></li>
-                <li><code>{"{{company}}"}</code> — <span className="font-normal">Contact's company</span></li>
-                <li><code>{"{{role}}"}</code> — <span className="font-normal">Contact's role</span></li>
-                <li><code>{"{{my_name}}"}</code> — <span className="font-normal">Your display name (Settings)</span></li>
-                <li><code>{"{{my_signature}}"}</code> — <span className="font-normal">Your signature (Settings)</span></li>
+                <li>
+                  <code>{"{{first_name}}"}</code> —{" "}
+                  <span className="font-normal">Contact's first name</span>
+                </li>
+                <li>
+                  <code>{"{{full_name}}"}</code> —{" "}
+                  <span className="font-normal">Contact's full name</span>
+                </li>
+                <li>
+                  <code>{"{{company}}"}</code> —{" "}
+                  <span className="font-normal">Contact's company</span>
+                </li>
+                <li>
+                  <code>{"{{role}}"}</code> — <span className="font-normal">Contact's role</span>
+                </li>
+                <li>
+                  <code>{"{{my_name}}"}</code> —{" "}
+                  <span className="font-normal">Your display name (Settings)</span>
+                </li>
+                <li>
+                  <code>{"{{my_signature}}"}</code> —{" "}
+                  <span className="font-normal">Your signature (Settings)</span>
+                </li>
               </ul>
             </div>
           </div>

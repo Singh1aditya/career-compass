@@ -175,9 +175,7 @@ export function StartOutreachWizard({
     if (companyName) {
       const target = companyName.toLowerCase();
       const preSelected = new Set(
-        all
-          .filter((c) => (c.company_name ?? "").toLowerCase().includes(target))
-          .map((c) => c.id),
+        all.filter((c) => (c.company_name ?? "").toLowerCase().includes(target)).map((c) => c.id),
       );
       setSelectedIds(preSelected);
     } else {
@@ -321,16 +319,14 @@ export function StartOutreachWizard({
     const skipped = selectedContacts.length - eligible.length;
 
     if (eligible.length > 0) {
-      const { error: recErr } = await supabase
-        .from("sequence_recipients")
-        .insert(
-          eligible.map((c) => ({
-            sequence_id: seq.id,
-            contact_id: c.id,
-            user_id: DEFAULT_USER_ID,
-            state: "waiting",
-          })),
-        );
+      const { error: recErr } = await supabase.from("sequence_recipients").insert(
+        eligible.map((c) => ({
+          sequence_id: seq.id,
+          contact_id: c.id,
+          user_id: DEFAULT_USER_ID,
+          state: "waiting",
+        })),
+      );
       if (recErr) {
         toast.error(`Sequence + steps created but recipients failed: ${recErr.message}`);
         setSubmitting(false);
@@ -342,7 +338,9 @@ export function StartOutreachWizard({
     setSubmitting(false);
     toast.success(
       `Campaign created with ${filledSteps.length} email step${filledSteps.length === 1 ? "" : "s"}` +
-        (eligible.length > 0 ? ` and ${eligible.length} recipient${eligible.length === 1 ? "" : "s"}` : "") +
+        (eligible.length > 0
+          ? ` and ${eligible.length} recipient${eligible.length === 1 ? "" : "s"}`
+          : "") +
         (skipped > 0 ? ` (${skipped} skipped — no email)` : ""),
     );
     onCreated(seq.id);
@@ -350,7 +348,10 @@ export function StartOutreachWizard({
 
   const goNext = () => {
     if (step === 1) {
-      if (!name.trim()) { toast.error("Name your campaign"); return; }
+      if (!name.trim()) {
+        toast.error("Name your campaign");
+        return;
+      }
       setStep(2);
     } else if (step === 2) {
       setStep(3);
@@ -395,7 +396,13 @@ export function StartOutreachWizard({
         </div>
 
         {step === 1 && (
-          <Step1Name name={name} setName={setName} matchCount={matchCount} bestMatchCount={bestMatchCount} companyName={companyName} />
+          <Step1Name
+            name={name}
+            setName={setName}
+            matchCount={matchCount}
+            bestMatchCount={bestMatchCount}
+            companyName={companyName}
+          />
         )}
 
         {step === 2 && (
@@ -447,8 +454,17 @@ export function StartOutreachWizard({
         <DialogFooter className="gap-2">
           <div className="text-xs text-muted-foreground mr-auto self-center">
             {step === 2 && <span>{selectedIds.size} selected (company match)</span>}
-            {step === 3 && <span>{bestMatchCount} best match{bestMatchCount === 1 ? "" : "es"} · {selectedIds.size} selected</span>}
-            {step === 4 && <span>{emailSteps.filter((s) => s.template_body.trim()).length} of 4 steps configured</span>}
+            {step === 3 && (
+              <span>
+                {bestMatchCount} best match{bestMatchCount === 1 ? "" : "es"} · {selectedIds.size}{" "}
+                selected
+              </span>
+            )}
+            {step === 4 && (
+              <span>
+                {emailSteps.filter((s) => s.template_body.trim()).length} of 4 steps configured
+              </span>
+            )}
           </div>
           {step > 1 && (
             <Button variant="ghost" onClick={goBack} disabled={submitting}>
@@ -465,7 +481,9 @@ export function StartOutreachWizard({
           ) : (
             <Button onClick={submit} disabled={submitting}>
               <Send className="h-3.5 w-3.5 mr-1" />
-              {submitting ? "Creating..." : `Create${selectedIds.size > 0 ? ` with ${selectedIds.size}` : ""}`}
+              {submitting
+                ? "Creating..."
+                : `Create${selectedIds.size > 0 ? ` with ${selectedIds.size}` : ""}`}
             </Button>
           )}
         </DialogFooter>
@@ -493,8 +511,8 @@ function Stepper({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
               step > it.n
                 ? "bg-primary text-primary-foreground"
                 : step === it.n
-                ? "bg-primary/15 text-primary border border-primary"
-                : "bg-muted text-muted-foreground"
+                  ? "bg-primary/15 text-primary border border-primary"
+                  : "bg-muted text-muted-foreground"
             }`}
           >
             {step > it.n ? <Check className="h-3 w-3" /> : it.n}
@@ -590,7 +608,11 @@ function Step2Recipients({
             <Users className="h-8 w-8 mx-auto mb-2 opacity-40" />
             <p>No contacts in this view.</p>
             {!showAll && companyName && (
-              <button type="button" className="text-xs underline mt-2" onClick={() => setShowAll(true)}>
+              <button
+                type="button"
+                className="text-xs underline mt-2"
+                onClick={() => setShowAll(true)}
+              >
                 Show contacts from all companies
               </button>
             )}
@@ -629,7 +651,10 @@ function Step2Recipients({
                       </p>
                     </div>
                     {!c.email && (
-                      <Badge variant="outline" className="text-[10px] h-4 px-1 text-muted-foreground">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] h-4 px-1 text-muted-foreground"
+                      >
                         no email
                       </Badge>
                     )}
@@ -685,7 +710,8 @@ function Step3Refine({
       <div className="border rounded-md max-h-80 overflow-y-auto">
         {refinedList.length === 0 ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
-            No contacts at this company. Go back to step 2 and toggle "Show all companies" to expand.
+            No contacts at this company. Go back to step 2 and toggle "Show all companies" to
+            expand.
           </div>
         ) : (
           refinedList.map(({ contact, match, tokens }) => (
@@ -753,22 +779,21 @@ function Step4Compose({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
-          Compose initial outreach + up to 3 follow-ups. Empty steps are skipped. Variables substitute per-recipient at send time.
+          Compose initial outreach + up to 3 follow-ups. Empty steps are skipped. Variables
+          substitute per-recipient at send time.
         </p>
         {selectedContacts.length > 0 && (
           <div className="flex items-center gap-2">
             <Label className="text-xs whitespace-nowrap">Preview as</Label>
-            <Select
-              value={previewContactId ?? ""}
-              onValueChange={(v) => setPreviewContactId(v)}
-            >
+            <Select value={previewContactId ?? ""} onValueChange={(v) => setPreviewContactId(v)}>
               <SelectTrigger className="h-7 text-xs w-48">
                 <SelectValue placeholder="—" />
               </SelectTrigger>
               <SelectContent>
                 {selectedContacts.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    {c.name}{c.company_name ? ` · ${c.company_name}` : ""}
+                    {c.name}
+                    {c.company_name ? ` · ${c.company_name}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -856,7 +881,9 @@ function StepEditor({
             value={step.delay_days}
             onChange={(e) => updateStep(index, { delay_days: Math.max(0, Number(e.target.value)) })}
           />
-          <span className="text-[11px] text-muted-foreground">day{step.delay_days === 1 ? "" : "s"}</span>
+          <span className="text-[11px] text-muted-foreground">
+            day{step.delay_days === 1 ? "" : "s"}
+          </span>
         </div>
       </div>
 
@@ -880,7 +907,9 @@ function StepEditor({
           value={step.template_body}
           onChange={(e) => updateStep(index, { template_body: e.target.value })}
           onFocus={() => setActiveField("body")}
-          placeholder={index === 0 ? "Hi {{first_name}}, …" : "(leave empty to skip this follow-up)"}
+          placeholder={
+            index === 0 ? "Hi {{first_name}}, …" : "(leave empty to skip this follow-up)"
+          }
           className="text-sm font-mono"
         />
       </div>
@@ -948,7 +977,11 @@ function Step5Confirm({
         <Stat n={eligible.length} label="Will be enrolled" tone="green" />
         <Stat n={skipped} label="Skipped (no email)" tone="muted" />
         <Stat n={filledSteps.length} label="Email steps" tone="primary" />
-        <Stat n={Math.max(...filledSteps.map((s) => s.delay_days), 0)} label="Days max delay" tone="muted" />
+        <Stat
+          n={Math.max(...filledSteps.map((s) => s.delay_days), 0)}
+          label="Days max delay"
+          tone="muted"
+        />
       </div>
 
       {initial && previewContact && (
@@ -969,15 +1002,28 @@ function Step5Confirm({
       )}
 
       <p className="text-xs text-muted-foreground">
-        Sequence will be created in <span className="font-medium">draft</span>. Toggle to <span className="font-medium">active</span> on the sequence page to start sending.
+        Sequence will be created in <span className="font-medium">draft</span>. Toggle to{" "}
+        <span className="font-medium">active</span> on the sequence page to start sending.
       </p>
     </div>
   );
 }
 
-function Stat({ n, label, tone }: { n: number; label: string; tone: "green" | "muted" | "primary" }) {
+function Stat({
+  n,
+  label,
+  tone,
+}: {
+  n: number;
+  label: string;
+  tone: "green" | "muted" | "primary";
+}) {
   const color =
-    tone === "green" ? "text-green-600" : tone === "primary" ? "text-primary" : "text-muted-foreground";
+    tone === "green"
+      ? "text-green-600"
+      : tone === "primary"
+        ? "text-primary"
+        : "text-muted-foreground";
   return (
     <div className="border rounded-md p-2">
       <p className={`text-2xl font-bold ${color}`}>{n}</p>

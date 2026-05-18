@@ -38,7 +38,9 @@ export function FollowUpsList({ contactId, applicationId }: Props) {
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
   );
 
-  useEffect(() => { load(); }, [contactId, applicationId]);
+  useEffect(() => {
+    load();
+  }, [contactId, applicationId]);
 
   const load = async () => {
     let q = supabase.from("follow_ups").select("*").order("due_date", { ascending: true });
@@ -59,7 +61,10 @@ export function FollowUpsList({ contactId, applicationId }: Props) {
       due_date: due,
       status: "pending",
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setDesc("");
     setAdding(false);
     load();
@@ -67,7 +72,10 @@ export function FollowUpsList({ contactId, applicationId }: Props) {
 
   const setStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("follow_ups").update({ status }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     load();
   };
 
@@ -96,8 +104,17 @@ export function FollowUpsList({ contactId, applicationId }: Props) {
               <Input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
             </div>
             <div className="flex gap-2">
-              <Button size="sm" onClick={create}>Save</Button>
-              <Button size="sm" variant="ghost" onClick={() => { setAdding(false); setDesc(""); }}>
+              <Button size="sm" onClick={create}>
+                Save
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setAdding(false);
+                  setDesc("");
+                }}
+              >
                 Cancel
               </Button>
             </div>
@@ -111,7 +128,9 @@ export function FollowUpsList({ contactId, applicationId }: Props) {
         <>
           {pending.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Pending</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Pending
+              </p>
               {pending.map((f) => (
                 <Card key={f.id}>
                   <CardContent className="p-3 flex items-center gap-3">
@@ -120,10 +139,20 @@ export function FollowUpsList({ contactId, applicationId }: Props) {
                       <p className="text-sm">{f.description ?? "(no description)"}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge
-                          variant={isOverdue(f.due_date) ? "destructive" : isToday(f.due_date) ? "default" : "outline"}
+                          variant={
+                            isOverdue(f.due_date)
+                              ? "destructive"
+                              : isToday(f.due_date)
+                                ? "default"
+                                : "outline"
+                          }
                           className="text-[10px] h-4 px-1"
                         >
-                          {isOverdue(f.due_date) ? "Overdue" : isToday(f.due_date) ? "Today" : new Date(f.due_date).toLocaleDateString()}
+                          {isOverdue(f.due_date)
+                            ? "Overdue"
+                            : isToday(f.due_date)
+                              ? "Today"
+                              : new Date(f.due_date).toLocaleDateString()}
                         </Badge>
                       </div>
                     </div>
@@ -152,14 +181,18 @@ export function FollowUpsList({ contactId, applicationId }: Props) {
           )}
           {done.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Completed / Skipped</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Completed / Skipped
+              </p>
               {done.map((f) => (
                 <Card key={f.id} className="opacity-60">
                   <CardContent className="p-3 flex items-center gap-3">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm line-through">{f.description ?? "(no description)"}</p>
                     </div>
-                    <Badge variant="outline" className="text-[10px] h-4 px-1">{f.status}</Badge>
+                    <Badge variant="outline" className="text-[10px] h-4 px-1">
+                      {f.status}
+                    </Badge>
                   </CardContent>
                 </Card>
               ))}

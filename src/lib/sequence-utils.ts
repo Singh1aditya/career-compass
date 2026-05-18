@@ -8,7 +8,12 @@ import { DEFAULT_USER_ID } from "@/lib/constants";
 // at send time, the edge function reads sender settings from the DB directly.
 export function renderTemplate(
   text: string,
-  contact: { name: string; company_name?: string | null; role?: string | null; email?: string | null }
+  contact: {
+    name: string;
+    company_name?: string | null;
+    role?: string | null;
+    email?: string | null;
+  },
 ): string {
   return renderTemplateCore(text, contact);
 }
@@ -16,7 +21,12 @@ export function renderTemplate(
 // Use this from UI when you want signature variables filled in for preview.
 export async function renderTemplateWithSender(
   text: string,
-  contact: { name: string; company_name?: string | null; role?: string | null; email?: string | null }
+  contact: {
+    name: string;
+    company_name?: string | null;
+    role?: string | null;
+    email?: string | null;
+  },
 ): Promise<string> {
   const sender = await loadSender();
   return renderTemplateCore(text, contact, sender);
@@ -25,11 +35,7 @@ export async function renderTemplateWithSender(
 /**
  * Get the next step to send for a recipient
  */
-async function getNextStepToSend(
-  sequenceId: string,
-  recipientId: string,
-  currentState: string
-) {
+async function getNextStepToSend(sequenceId: string, recipientId: string, currentState: string) {
   // Map state to next step type
   const stateToStepMap: Record<string, string> = {
     waiting: "initial",
@@ -59,10 +65,7 @@ export async function processPendingSends() {
 
   try {
     // Get all active sequences
-    const { data: sequences } = await supabase
-      .from("sequences")
-      .select("*")
-      .eq("status", "active");
+    const { data: sequences } = await supabase.from("sequences").select("*").eq("status", "active");
 
     if (!sequences || sequences.length === 0) {
       console.log("[Sequences] No active sequences");
@@ -85,11 +88,7 @@ export async function processPendingSends() {
       if (!recipients || recipients.length === 0) continue;
 
       for (const recipient of recipients) {
-        const step = await getNextStepToSend(
-          sequence.id,
-          recipient.id,
-          recipient.state
-        );
+        const step = await getNextStepToSend(sequence.id, recipient.id, recipient.state);
 
         if (!step) {
           // No more steps, mark as completed
@@ -135,9 +134,7 @@ export async function processPendingSends() {
 
           // Update recipient state
           const nextState =
-            step.step_type === "initial"
-              ? "initial_sent"
-              : `followup_${step.step_number}`;
+            step.step_type === "initial" ? "initial_sent" : `followup_${step.step_number}`;
 
           // Get next step to calculate when to send next
           const nextStep = await supabase
@@ -202,7 +199,7 @@ async function sendEmail(params: {
           recipientId: params.recipientId,
           stepNumber: params.stepNumber,
         }),
-      }
+      },
     );
 
     const result = await response.json();
@@ -223,10 +220,7 @@ async function sendEmail(params: {
 /**
  * Enroll a contact in a sequence (initialize with first step)
  */
-export async function enrollContactInSequence(
-  sequenceId: string,
-  contactId: string
-) {
+export async function enrollContactInSequence(sequenceId: string, contactId: string) {
   // Get first step
   const { data: firstStep } = await supabase
     .from("sequence_steps")
@@ -276,9 +270,7 @@ export async function getSequenceStats(sequenceId: string) {
     total: recipients.length,
     waiting: recipients.filter((r) => r.state === "waiting").length,
     sent: recipients.filter((r) =>
-      ["initial_sent", "followup_1", "followup_2", "followup_3"].includes(
-        r.state
-      )
+      ["initial_sent", "followup_1", "followup_2", "followup_3"].includes(r.state),
     ).length,
     replied: recipients.filter((r) => r.state === "replied").length,
     bounced: recipients.filter((r) => r.state === "bounced").length,

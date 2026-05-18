@@ -3,11 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { DEFAULT_USER_ID } from "@/lib/constants";
@@ -22,10 +18,7 @@ interface Props {
   contactId: string;
 }
 
-const PRESET_COLORS = [
-  "#EF4444", "#F59E0B", "#10B981", "#3B82F6",
-  "#8B5CF6", "#EC4899", "#6B7280",
-];
+const PRESET_COLORS = ["#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6", "#EC4899", "#6B7280"];
 
 export function TagEditor({ contactId }: Props) {
   const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -56,12 +49,18 @@ export function TagEditor({ contactId }: Props) {
         .delete()
         .eq("contact_id", contactId)
         .eq("tag_id", tagId);
-      if (error) { toast.error(error.message); return; }
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
     } else {
       const { error } = await supabase
         .from("contact_tags")
         .insert({ contact_id: contactId, tag_id: tagId });
-      if (error) { toast.error(error.message); return; }
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
     }
     load();
   };
@@ -74,7 +73,10 @@ export function TagEditor({ contactId }: Props) {
       .insert({ user_id: DEFAULT_USER_ID, name, color: newTagColor })
       .select()
       .single();
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (data) {
       await supabase.from("contact_tags").insert({
         contact_id: contactId,
@@ -145,7 +147,9 @@ export function TagEditor({ contactId }: Props) {
                   onChange={(e) => setNewTagName(e.target.value)}
                   placeholder="Tag name"
                   className="h-7 text-xs"
-                  onKeyDown={(e) => { if (e.key === "Enter") createTag(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") createTag();
+                  }}
                 />
                 <Button size="sm" className="h-7" onClick={createTag} disabled={!newTagName.trim()}>
                   Add

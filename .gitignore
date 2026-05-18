@@ -46,3 +46,11 @@ scripts/probe*.ts
 
 # Claude Code local memory and settings — contains personal context
 .claude/
+
+# Playwright test artifacts — may contain screenshots with user data
+test-results/
+playwright-report/
+blob-report/
+
+# Temporary dev server logs
+/tmp/vite-dev*.log

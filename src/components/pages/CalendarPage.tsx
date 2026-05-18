@@ -91,7 +91,10 @@ export function CalendarPage() {
       }
     }
     const { error } = await db.from("events").delete().eq("id", ev.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Event deleted");
     setEvents((prev) => prev.filter((e) => e.id !== ev.id));
   };
@@ -174,7 +177,9 @@ export function CalendarPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <CardTitle className="text-sm font-semibold">{ev.title}</CardTitle>
-                      <Badge className={`text-[10px] h-4 px-1.5 ${KIND_COLORS[ev.kind] ?? KIND_COLORS.other}`}>
+                      <Badge
+                        className={`text-[10px] h-4 px-1.5 ${KIND_COLORS[ev.kind] ?? KIND_COLORS.other}`}
+                      >
                         {KIND_LABELS[ev.kind] ?? ev.kind}
                       </Badge>
                       {ev.gcal_event_id && (
@@ -208,9 +213,7 @@ export function CalendarPage() {
                   <Clock className="h-3 w-3" />
                   <span>
                     {format(new Date(ev.scheduled_at), "h:mm a")} ·{" "}
-                    {ev.duration_min < 60
-                      ? `${ev.duration_min} min`
-                      : `${ev.duration_min / 60}h`}
+                    {ev.duration_min < 60 ? `${ev.duration_min} min` : `${ev.duration_min / 60}h`}
                   </span>
                 </div>
                 {ev.location && (
@@ -242,7 +245,8 @@ export function CalendarPage() {
           ))}
 
           {/* Upcoming events overview (non-selected days this month) */}
-          {events.filter((e) => !selected || !isSameDay(new Date(e.scheduled_at), selected)).length > 0 && (
+          {events.filter((e) => !selected || !isSameDay(new Date(e.scheduled_at), selected))
+            .length > 0 && (
             <details className="mt-4">
               <summary className="text-xs text-muted-foreground cursor-pointer select-none">
                 All events this month ({events.length})
@@ -258,7 +262,9 @@ export function CalendarPage() {
                       {format(new Date(ev.scheduled_at), "MMM d")}
                     </span>
                     <span className="font-medium truncate">{ev.title}</span>
-                    <Badge className={`ml-auto text-[10px] h-4 px-1 shrink-0 ${KIND_COLORS[ev.kind] ?? ""}`}>
+                    <Badge
+                      className={`ml-auto text-[10px] h-4 px-1 shrink-0 ${KIND_COLORS[ev.kind] ?? ""}`}
+                    >
                       {KIND_LABELS[ev.kind] ?? ev.kind}
                     </Badge>
                   </div>

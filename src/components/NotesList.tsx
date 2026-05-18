@@ -45,7 +45,10 @@ export function NotesList({ contactId, applicationId }: Props) {
       application_id: applicationId ?? null,
       content: draft.trim(),
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setDraft("");
     setAdding(false);
     load();
@@ -53,7 +56,10 @@ export function NotesList({ contactId, applicationId }: Props) {
 
   const handleDelete = async (id: string) => {
     const { error } = await supabase.from("notes").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     load();
   };
 
@@ -75,8 +81,17 @@ export function NotesList({ contactId, applicationId }: Props) {
             autoFocus
           />
           <div className="flex gap-2">
-            <Button size="sm" onClick={handleAdd}>Save</Button>
-            <Button size="sm" variant="ghost" onClick={() => { setAdding(false); setDraft(""); }}>
+            <Button size="sm" onClick={handleAdd}>
+              Save
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setAdding(false);
+                setDraft("");
+              }}
+            >
               Cancel
             </Button>
           </div>

@@ -43,23 +43,29 @@ export function UserSettingsPanel() {
 
   const save = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from("user_settings")
-      .upsert({
-        user_id: DEFAULT_USER_ID,
-        display_name: s.display_name || null,
-        signature: s.signature || null,
-        daily_email_cap: s.daily_email_cap,
-        per_tick_email_cap: s.per_tick_email_cap,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from("user_settings").upsert({
+      user_id: DEFAULT_USER_ID,
+      display_name: s.display_name || null,
+      signature: s.signature || null,
+      daily_email_cap: s.daily_email_cap,
+      per_tick_email_cap: s.per_tick_email_cap,
+      updated_at: new Date().toISOString(),
+    });
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     clearSenderCache();
     toast.success("Settings saved");
   };
 
-  if (loading) return <Card><CardContent className="p-6 text-muted-foreground">Loading...</CardContent></Card>;
+  if (loading)
+    return (
+      <Card>
+        <CardContent className="p-6 text-muted-foreground">Loading...</CardContent>
+      </Card>
+    );
 
   return (
     <Card>
@@ -69,7 +75,9 @@ export function UserSettingsPanel() {
           <div>
             <CardTitle>Profile & Sending Limits</CardTitle>
             <CardDescription>
-              These power the <code className="text-xs">{"{{my_name}}"}</code> and <code className="text-xs">{"{{my_signature}}"}</code> template variables and cap how many emails each cron tick sends.
+              These power the <code className="text-xs">{"{{my_name}}"}</code> and{" "}
+              <code className="text-xs">{"{{my_signature}}"}</code> template variables and cap how
+              many emails each cron tick sends.
             </CardDescription>
           </div>
         </div>
@@ -82,7 +90,9 @@ export function UserSettingsPanel() {
             onChange={(e) => setS({ ...s, display_name: e.target.value })}
             placeholder="Adi Singh"
           />
-          <p className="text-xs text-muted-foreground mt-1">Replaces <code>{"{{my_name}}"}</code></p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Replaces <code>{"{{my_name}}"}</code>
+          </p>
         </div>
         <div>
           <Label>Email signature</Label>
@@ -93,7 +103,9 @@ export function UserSettingsPanel() {
             rows={5}
             className="font-mono text-sm"
           />
-          <p className="text-xs text-muted-foreground mt-1">Replaces <code>{"{{my_signature}}"}</code></p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Replaces <code>{"{{my_signature}}"}</code>
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -116,7 +128,9 @@ export function UserSettingsPanel() {
               value={s.daily_email_cap}
               onChange={(e) => setS({ ...s, daily_email_cap: Number(e.target.value) })}
             />
-            <p className="text-xs text-muted-foreground mt-1">Soft cap (informational; not yet enforced)</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Soft cap (informational; not yet enforced)
+            </p>
           </div>
         </div>
         <Button onClick={save} disabled={saving}>

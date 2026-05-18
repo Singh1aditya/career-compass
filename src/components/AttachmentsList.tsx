@@ -73,7 +73,7 @@ export function AttachmentsList({ parent }: Props) {
         } else if (data) {
           toast.success(`${file.name} uploaded`);
         }
-      })
+      }),
     );
     setUploading(false);
     load();

@@ -21,7 +21,7 @@ describe("validateFile", () => {
     const f = makeFile(
       "doc.docx",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      200 * 1024
+      200 * 1024,
     );
     expect(validateFile(f)).toBeNull();
   });

@@ -18,7 +18,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -105,7 +111,10 @@ export function AIComposeButton({
       <Button
         variant={variant}
         size={size}
-        onClick={() => { setOpen(true); setOutput(null); }}
+        onClick={() => {
+          setOpen(true);
+          setOutput(null);
+        }}
       >
         <Sparkles className="h-3.5 w-3.5 mr-1.5" />
         {label ?? KIND_LABELS[kind]}
@@ -131,7 +140,9 @@ export function AIComposeButton({
                   </SelectTrigger>
                   <SelectContent>
                     {TONE_OPTIONS.map((t) => (
-                      <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                      <SelectItem key={t} value={t} className="capitalize">
+                        {t}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -175,7 +186,11 @@ export function AIComposeButton({
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={handleCopy}>
-                    {copied ? <Check className="h-3.5 w-3.5 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 mr-1" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5 mr-1" />
+                    )}
                     {copied ? "Copied" : "Copy"}
                   </Button>
                   <Button size="sm" variant="outline" onClick={handleGenerate} disabled={loading}>

@@ -6,7 +6,11 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — Career CRM" },
-      { name: "description", content: "Your career command center with daily actions, pipeline overview, and recent activity." },
+      {
+        name: "description",
+        content:
+          "Your career command center with daily actions, pipeline overview, and recent activity.",
+      },
     ],
   }),
 });

@@ -12,15 +12,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 import { DEFAULT_USER_ID } from "../_shared/constants.ts";
 
 // Gmail search query that catches both confirmation and rejection emails
 const GMAIL_QUERY = [
-  '(',
+  "(",
   'subject:"thank you for applying"',
   'OR subject:"thanks for applying"',
   'OR subject:"application received"',
@@ -31,9 +30,9 @@ const GMAIL_QUERY = [
   'OR subject:"regret to inform"',
   'OR subject:"decided to move forward"',
   'OR subject:"after careful consideration"',
-  ')',
-  'newer_than:60d',
-].join(' ');
+  ")",
+  "newer_than:60d",
+].join(" ");
 
 const CONFIRMATION_PATTERNS = [
   /thank(s| you) for applying/i,
@@ -146,11 +145,7 @@ serve(async (req: Request) => {
 
       if (classification === "confirmation" && detected.company && detected.role) {
         // Find existing application for this company+role
-        const existingApp = await findApplication(
-          supabase,
-          detected.company,
-          detected.role,
-        );
+        const existingApp = await findApplication(supabase, detected.company, detected.role);
         if (existingApp) {
           applicationId = existingApp.id;
           action = "noop";
@@ -163,9 +158,7 @@ serve(async (req: Request) => {
               role_title: detected.role,
               company_name: detected.company,
               status: "applied",
-              applied_date: dateHeader
-                ? new Date(dateHeader).toISOString().slice(0, 10)
-                : null,
+              applied_date: dateHeader ? new Date(dateHeader).toISOString().slice(0, 10) : null,
               source: "Email Auto-Detect",
               notes: `Auto-imported from Gmail on ${new Date().toISOString().slice(0, 10)}\nSubject: ${subject}`,
             })
@@ -178,11 +171,7 @@ serve(async (req: Request) => {
           }
         }
       } else if (classification === "rejection" && detected.company) {
-        const existingApp = await findApplication(
-          supabase,
-          detected.company,
-          detected.role,
-        );
+        const existingApp = await findApplication(supabase, detected.company, detected.role);
         if (existingApp && existingApp.status !== "rejected") {
           await supabase
             .from("applications")
@@ -249,10 +238,7 @@ async function listMessages(
   return json.messages ?? [];
 }
 
-async function getMessage(
-  accessToken: string,
-  messageId: string,
-): Promise<GmailFullMessage> {
+async function getMessage(accessToken: string, messageId: string): Promise<GmailFullMessage> {
   const url = `https://www.googleapis.com/gmail/v1/users/me/messages/${messageId}?format=full`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -328,11 +314,7 @@ interface Detected {
   role: string | null;
 }
 
-function extractCompanyAndRole(
-  subject: string,
-  body: string,
-  fromHeader: string,
-): Detected {
+function extractCompanyAndRole(subject: string, body: string, fromHeader: string): Detected {
   const role = extractRole(subject, body);
   const company = extractCompany(subject, body, fromHeader);
   return { role, company };
@@ -368,23 +350,16 @@ function cleanRole(raw: string): string {
     .slice(0, 120);
 }
 
-function extractCompany(
-  subject: string,
-  body: string,
-  fromHeader: string,
-): string | null {
+function extractCompany(subject: string, body: string, fromHeader: string): string | null {
   // Try subject "at <Company>" first
-  const atMatch =
-    subject.match(/\bat\s+([A-Z][\w&.,'\- ]{1,60}?)(?:[!.\n]|\s*$)/);
+  const atMatch = subject.match(/\bat\s+([A-Z][\w&.,'\- ]{1,60}?)(?:[!.\n]|\s*$)/);
   if (atMatch && atMatch[1]) {
     const candidate = atMatch[1].trim();
     if (candidate.length >= 2) return candidate;
   }
 
   // Body: "at <Company>" near "applying" / "application"
-  const bodyMatch = body
-    .slice(0, 2000)
-    .match(/\bat\s+([A-Z][\w&.,'\- ]{1,60}?)(?:[!.\n]|\s*$)/);
+  const bodyMatch = body.slice(0, 2000).match(/\bat\s+([A-Z][\w&.,'\- ]{1,60}?)(?:[!.\n]|\s*$)/);
   if (bodyMatch && bodyMatch[1]) {
     return bodyMatch[1].trim();
   }
@@ -404,7 +379,10 @@ function extractCompany(
     const domain = domainMatch[1].toLowerCase();
     if (!ATS_DOMAINS.has(domain)) {
       const root = domain
-        .replace(/^(mail\.|email\.|notifications?\.|hr\.|jobs\.|careers\.|talent\.|recruiting\.)/, "")
+        .replace(
+          /^(mail\.|email\.|notifications?\.|hr\.|jobs\.|careers\.|talent\.|recruiting\.)/,
+          "",
+        )
         .replace(/\.(com|io|co|net|org|ai|app|dev|us|uk)$/, "");
       if (root.length >= 2) {
         return root.charAt(0).toUpperCase() + root.slice(1);
@@ -417,11 +395,7 @@ function extractCompany(
 
 // --- Database lookup ---
 
-async function findApplication(
-  supabase: any,
-  company: string,
-  role: string | null,
-) {
+async function findApplication(supabase: any, company: string, role: string | null) {
   // Try exact-ish match on company + role
   if (role) {
     const { data: byBoth } = await supabase
@@ -469,10 +443,7 @@ async function getValidAccessToken(supabase: any): Promise<string | null> {
   return token.access_token;
 }
 
-async function refreshGmailToken(
-  supabase: any,
-  refreshToken: string,
-): Promise<boolean> {
+async function refreshGmailToken(supabase: any, refreshToken: string): Promise<boolean> {
   const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
   const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
   if (!clientId || !clientSecret) return false;

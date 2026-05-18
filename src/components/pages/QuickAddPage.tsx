@@ -41,10 +41,7 @@ export function QuickAddPage() {
     setLoading(true);
     setResult(null);
 
-    const payload =
-      mode === "url"
-        ? { url: url.trim() }
-        : { jd_text: jdText.trim() };
+    const payload = mode === "url" ? { url: url.trim() } : { jd_text: jdText.trim() };
 
     const { data, error } = await supabase.functions.invoke("quick-capture", {
       body: payload,
@@ -79,7 +76,9 @@ export function QuickAddPage() {
   .then(r=>r.json())
   .then(d=>{if(d.ok){alert('Added: '+d.role_title+(d.company_name?' @ '+d.company_name:''))}else{alert('Error: '+d.error)}})
   .catch(()=>alert('CRM capture failed'));
-})();`.replace(/\s+/g, " ").trim();
+})();`
+    .replace(/\s+/g, " ")
+    .trim();
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -88,7 +87,8 @@ export function QuickAddPage() {
           <Zap className="h-6 w-6 text-primary" /> Quick Add
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Capture a job posting from a URL or paste the description — added to Wishlist in one click.
+          Capture a job posting from a URL or paste the description — added to Wishlist in one
+          click.
         </p>
       </div>
 
@@ -157,7 +157,8 @@ export function QuickAddPage() {
                   {result.role_title}
                   {result.company_name && (
                     <span className="font-normal text-green-700 dark:text-green-400">
-                      {" "}@ {result.company_name}
+                      {" "}
+                      @ {result.company_name}
                     </span>
                   )}
                 </p>
@@ -213,9 +214,9 @@ export function QuickAddPage() {
             <Zap className="h-4 w-4" /> Add to CRM
           </a>
           <p className="text-xs text-muted-foreground">
-            Drag the button above to your bookmarks bar. When on a job posting, click it to
-            capture the current page. If you've selected text on the page, it'll use that as
-            the job description for better parsing.
+            Drag the button above to your bookmarks bar. When on a job posting, click it to capture
+            the current page. If you've selected text on the page, it'll use that as the job
+            description for better parsing.
           </p>
           <details>
             <summary className="text-xs text-muted-foreground cursor-pointer">

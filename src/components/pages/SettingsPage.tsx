@@ -4,7 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Mail, Lock, Bell, Clock, CheckCircle, Bot, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { EmailScanStatus } from "@/components/EmailScanStatus";
@@ -93,21 +99,28 @@ export function SettingsPage() {
       updated_at: new Date().toISOString(),
     });
     setReminderSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Reminder settings saved");
   };
 
   const runDigestNow = async () => {
     setDigestRunning(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("send-daily-digest");
       if (res.error) throw new Error(res.error.message);
       const body = res.data as any;
       if (body?.skipped) {
         toast.info(`Digest skipped: ${body.reason}`);
       } else {
-        toast.success(`Digest sent! ${body?.summary?.overdue_count ?? 0} overdue, ${body?.summary?.replies_count ?? 0} replies`);
+        toast.success(
+          `Digest sent! ${body?.summary?.overdue_count ?? 0} overdue, ${body?.summary?.replies_count ?? 0} replies`,
+        );
       }
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to send digest");
@@ -121,7 +134,9 @@ export function SettingsPage() {
       const res = await supabase.functions.invoke("generate-auto-followups");
       if (res.error) throw new Error(res.error.message);
       const body = res.data as any;
-      toast.success(`Generated ${body?.created ?? 0} auto follow-up${body?.created !== 1 ? "s" : ""}`);
+      toast.success(
+        `Generated ${body?.created ?? 0} auto follow-up${body?.created !== 1 ? "s" : ""}`,
+      );
     } catch (e: any) {
       toast.error(e?.message ?? "Failed to generate follow-ups");
     }
@@ -155,8 +170,14 @@ export function SettingsPage() {
 
   const handleConnectGmail = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-    if (!clientId || clientId.startsWith("YOUR_") || !clientId.includes(".apps.googleusercontent.com")) {
-      toast.error("VITE_GOOGLE_CLIENT_ID is not configured. Add your Google OAuth Client ID to .env.local.");
+    if (
+      !clientId ||
+      clientId.startsWith("YOUR_") ||
+      !clientId.includes(".apps.googleusercontent.com")
+    ) {
+      toast.error(
+        "VITE_GOOGLE_CLIENT_ID is not configured. Add your Google OAuth Client ID to .env.local.",
+      );
       return;
     }
     const redirectUri = `${window.location.origin}/auth/gmail/callback`;
@@ -201,7 +222,9 @@ export function SettingsPage() {
                 <Mail className="h-5 w-5 text-primary" />
                 <div>
                   <CardTitle>Gmail Integration</CardTitle>
-                  <CardDescription>Connect your Gmail account to send emails from sequences</CardDescription>
+                  <CardDescription>
+                    Connect your Gmail account to send emails from sequences
+                  </CardDescription>
                 </div>
               </div>
               {gmailConnected && (
@@ -213,36 +236,48 @@ export function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!loading && (
-              gmailConnected ? (
+            {!loading &&
+              (gmailConnected ? (
                 <div className="space-y-3">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <p className="text-sm font-medium text-green-900">Gmail connected</p>
-                    <p className="text-xs text-green-700 mt-1">{gmailEmail || "Ready to send emails"}</p>
+                    <p className="text-xs text-green-700 mt-1">
+                      {gmailEmail || "Ready to send emails"}
+                    </p>
                   </div>
                   {!gmailHasCalendarScope && (
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 space-y-2">
-                      <p className="text-sm font-medium text-amber-900">Google Calendar not authorized</p>
-                      <p className="text-xs text-amber-700">Re-connect Gmail to enable interview scheduling sync with Google Calendar.</p>
+                      <p className="text-sm font-medium text-amber-900">
+                        Google Calendar not authorized
+                      </p>
+                      <p className="text-xs text-amber-700">
+                        Re-connect Gmail to enable interview scheduling sync with Google Calendar.
+                      </p>
                       <Button size="sm" variant="outline" onClick={handleConnectGmail}>
                         Re-connect to add Calendar access
                       </Button>
                     </div>
                   )}
-                  <Button variant="destructive" onClick={handleDisconnectGmail}>Disconnect Gmail</Button>
+                  <Button variant="destructive" onClick={handleDisconnectGmail}>
+                    Disconnect Gmail
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Authorize Career CRM to send emails from your Gmail account.
                   </p>
-                  <Button onClick={handleConnectGmail} className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Button
+                    onClick={handleConnectGmail}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
                     <Mail className="h-4 w-4 mr-2" /> Connect Gmail
                   </Button>
-                  <p className="text-xs text-muted-foreground">Requires Gmail send/read + Google Calendar access.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Requires Gmail send/read + Google Calendar access.
+                  </p>
                 </div>
-              )
-            )}
+              ))}
           </CardContent>
         </Card>
 
@@ -259,15 +294,21 @@ export function SettingsPage() {
               <Bell className="h-5 w-5 text-primary" />
               <div>
                 <CardTitle>Reminders &amp; Daily Digest</CardTitle>
-                <CardDescription>Get emailed each morning with overdue follow-ups, replies, and weekly stats</CardDescription>
+                <CardDescription>
+                  Get emailed each morning with overdue follow-ups, replies, and weekly stats
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="digest-toggle" className="text-sm font-medium">Daily digest email</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Sent to your connected Gmail address</p>
+                <Label htmlFor="digest-toggle" className="text-sm font-medium">
+                  Daily digest email
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Sent to your connected Gmail address
+                </p>
               </div>
               <Switch
                 id="digest-toggle"
@@ -281,14 +322,18 @@ export function SettingsPage() {
                 <Label className="text-sm text-muted-foreground shrink-0">Send at</Label>
                 <Select
                   value={String(reminderSettings.digest_hour)}
-                  onValueChange={(v) => setReminderSettings((s) => ({ ...s, digest_hour: Number(v) }))}
+                  onValueChange={(v) =>
+                    setReminderSettings((s) => ({ ...s, digest_hour: Number(v) }))
+                  }
                 >
                   <SelectTrigger className="w-36">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {HOUR_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={String(o.value)}>{o.label}</SelectItem>
+                      <SelectItem key={o.value} value={String(o.value)}>
+                        {o.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -298,13 +343,19 @@ export function SettingsPage() {
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="autofollowup-toggle" className="text-sm font-medium">Auto-generate follow-ups</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Creates reminders for stale applications and sequences after 7 days</p>
+                <Label htmlFor="autofollowup-toggle" className="text-sm font-medium">
+                  Auto-generate follow-ups
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Creates reminders for stale applications and sequences after 7 days
+                </p>
               </div>
               <Switch
                 id="autofollowup-toggle"
                 checked={reminderSettings.auto_followups_enabled}
-                onCheckedChange={(v) => setReminderSettings((s) => ({ ...s, auto_followups_enabled: v }))}
+                onCheckedChange={(v) =>
+                  setReminderSettings((s) => ({ ...s, auto_followups_enabled: v }))
+                }
               />
             </div>
 
@@ -330,27 +381,38 @@ export function SettingsPage() {
               <Sparkles className="h-5 w-5 text-primary" />
               <div>
                 <CardTitle>AI Copilot</CardTitle>
-                <CardDescription>Draft emails, summarise threads, analyse job descriptions — powered by Claude</CardDescription>
+                <CardDescription>
+                  Draft emails, summarise threads, analyse job descriptions — powered by Claude
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Use the <strong>Draft with AI</strong> button on application and sequence pages. Requires{" "}
-              <code className="text-xs bg-muted px-1 py-0.5 rounded">ANTHROPIC_API_KEY</code> set in Supabase Edge Function secrets.
+              Use the <strong>Draft with AI</strong> button on application and sequence pages.
+              Requires{" "}
+              <code className="text-xs bg-muted px-1 py-0.5 rounded">ANTHROPIC_API_KEY</code> set in
+              Supabase Edge Function secrets.
             </p>
             {aiUsage ? (
               <div className="rounded-lg border p-4 space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">This month</span>
-                  <span className="text-muted-foreground">{aiUsage.totalRuns} runs · ${aiUsage.totalCost.toFixed(4)}</span>
+                  <span className="text-muted-foreground">
+                    {aiUsage.totalRuns} runs · ${aiUsage.totalCost.toFixed(4)}
+                  </span>
                 </div>
                 {aiUsage.byKind.length > 0 && (
                   <div className="space-y-1">
                     {aiUsage.byKind.map((row) => (
-                      <div key={row.kind} className="flex justify-between text-xs text-muted-foreground">
+                      <div
+                        key={row.kind}
+                        className="flex justify-between text-xs text-muted-foreground"
+                      >
                         <span className="capitalize">{row.kind.replace(/_/g, " ")}</span>
-                        <span>{row.runs} runs · ${row.cost.toFixed(4)}</span>
+                        <span>
+                          {row.runs} runs · ${row.cost.toFixed(4)}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -376,7 +438,9 @@ export function SettingsPage() {
           <CardContent>
             <div className="flex items-center justify-between">
               <span className="text-sm">Two-factor authentication</span>
-              <Button variant="outline" size="sm" disabled>Enable</Button>
+              <Button variant="outline" size="sm" disabled>
+                Enable
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -388,12 +452,16 @@ export function SettingsPage() {
               <Clock className="h-5 w-5 text-primary" />
               <div>
                 <CardTitle>Preferred Send Time</CardTitle>
-                <CardDescription>Configure when emails from sequences should be sent</CardDescription>
+                <CardDescription>
+                  Configure when emails from sequences should be sent
+                </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">Managed via the per-tick cap in Profile &amp; Sending Limits above</p>
+            <p className="text-sm text-muted-foreground">
+              Managed via the per-tick cap in Profile &amp; Sending Limits above
+            </p>
           </CardContent>
         </Card>
       </div>

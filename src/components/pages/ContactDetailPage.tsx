@@ -7,12 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -91,7 +86,9 @@ export function ContactDetailPage({ contactId }: Props) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<Partial<Contact>>({});
 
-  useEffect(() => { load(); }, [contactId]);
+  useEffect(() => {
+    load();
+  }, [contactId]);
 
   const load = async () => {
     setLoading(true);
@@ -145,7 +142,10 @@ export function ContactDetailPage({ contactId }: Props) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", contactId);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Contact updated");
     setEditing(false);
     load();
@@ -177,11 +177,7 @@ export function ContactDetailPage({ contactId }: Props) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate({ to: "/contacts" })}
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/contacts" })}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Contacts
         </Button>
       </div>
@@ -192,11 +188,16 @@ export function ContactDetailPage({ contactId }: Props) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold truncate">{contact.name}</h1>
-                <Badge variant="secondary" className={`text-xs ${typeColors[contact.contact_type]}`}>
+                <Badge
+                  variant="secondary"
+                  className={`text-xs ${typeColors[contact.contact_type]}`}
+                >
                   {contact.contact_type}
                 </Badge>
                 {contact.status === "archived" && (
-                  <Badge variant="outline" className="text-xs">Archived</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Archived
+                  </Badge>
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm text-muted-foreground">
@@ -207,7 +208,10 @@ export function ContactDetailPage({ contactId }: Props) {
                   </span>
                 )}
                 {contact.email && (
-                  <a href={`mailto:${contact.email}`} className="flex items-center gap-1 hover:underline">
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className="flex items-center gap-1 hover:underline"
+                  >
                     <Mail className="h-3 w-3" /> {contact.email}
                   </a>
                 )}
@@ -224,13 +228,21 @@ export function ContactDetailPage({ contactId }: Props) {
             <div className="flex gap-2 shrink-0 flex-wrap">
               <AIComposeButton
                 kind="draft_email"
-                context={{ contact_name: contact.name, company: contact.company_name ?? "", role: contact.role ?? "" }}
+                context={{
+                  contact_name: contact.name,
+                  company: contact.company_name ?? "",
+                  role: contact.role ?? "",
+                }}
                 size="sm"
                 variant="outline"
               />
               <LogInteractionDialog contactId={contact.id} onLogged={load} />
               <Button variant="outline" size="sm" onClick={toggleArchive}>
-                {contact.status === "active" ? <Archive className="h-3.5 w-3.5 mr-1" /> : <RotateCcw className="h-3.5 w-3.5 mr-1" />}
+                {contact.status === "active" ? (
+                  <Archive className="h-3.5 w-3.5 mr-1" />
+                ) : (
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                )}
                 {contact.status === "active" ? "Archive" : "Restore"}
               </Button>
             </div>
@@ -257,10 +269,19 @@ export function ContactDetailPage({ contactId }: Props) {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-base">Details</CardTitle>
               {!editing ? (
-                <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>
+                <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                  Edit
+                </Button>
               ) : (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setForm(contact); }}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditing(false);
+                      setForm(contact);
+                    }}
+                  >
                     Cancel
                   </Button>
                   <Button size="sm" onClick={handleSave}>
@@ -287,34 +308,58 @@ export function ContactDetailPage({ contactId }: Props) {
                 <div className="space-y-3">
                   <div>
                     <Label>Name *</Label>
-                    <Input value={form.name ?? ""} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                    <Input
+                      value={form.name ?? ""}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label>Email</Label>
-                      <Input value={form.email ?? ""} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                      <Input
+                        value={form.email ?? ""}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      />
                     </div>
                     <div>
                       <Label>Phone</Label>
-                      <Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                      <Input
+                        value={form.phone ?? ""}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label>Company</Label>
-                      <Input value={form.company_name ?? ""} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
+                      <Input
+                        value={form.company_name ?? ""}
+                        onChange={(e) => setForm({ ...form, company_name: e.target.value })}
+                      />
                     </div>
                     <div>
                       <Label>Role</Label>
-                      <Input value={form.role ?? ""} onChange={(e) => setForm({ ...form, role: e.target.value })} />
+                      <Input
+                        value={form.role ?? ""}
+                        onChange={(e) => setForm({ ...form, role: e.target.value })}
+                      />
                     </div>
                   </div>
                   <div>
                     <Label>Type</Label>
-                    <Select value={form.contact_type} onValueChange={(v) => setForm({ ...form, contact_type: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    <Select
+                      value={form.contact_type}
+                      onValueChange={(v) => setForm({ ...form, contact_type: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        {TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                        {TYPES.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {t}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -342,12 +387,20 @@ export function ContactDetailPage({ contactId }: Props) {
               ) : (
                 interactions.map((i) => (
                   <div key={i.id} className="flex items-start gap-3 border-b pb-3 last:border-b-0">
-                    <div className={`h-2 w-2 rounded-full mt-2 shrink-0 ${i.direction === "outbound" ? "bg-primary" : "bg-success"}`} />
+                    <div
+                      className={`h-2 w-2 rounded-full mt-2 shrink-0 ${i.direction === "outbound" ? "bg-primary" : "bg-success"}`}
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="secondary" className="text-[10px] h-4 px-1">{i.type}</Badge>
-                        <Badge variant="outline" className="text-[10px] h-4 px-1">{i.direction}</Badge>
-                        <span className="text-xs text-muted-foreground">{new Date(i.date).toLocaleDateString()}</span>
+                        <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                          {i.type}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] h-4 px-1">
+                          {i.direction}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(i.date).toLocaleDateString()}
+                        </span>
                       </div>
                       {i.summary && <p className="text-sm mt-1">{i.summary}</p>}
                     </div>
@@ -363,7 +416,8 @@ export function ContactDetailPage({ contactId }: Props) {
             <CardContent className="p-4 space-y-2">
               {linkedApps.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4 text-center">
-                  No linked applications. Log an interaction with an Application linked to populate this list.
+                  No linked applications. Log an interaction with an Application linked to populate
+                  this list.
                 </p>
               ) : (
                 linkedApps.map((a) => (
@@ -376,9 +430,13 @@ export function ContactDetailPage({ contactId }: Props) {
                       <Briefcase className="h-4 w-4 text-muted-foreground" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{a.role_title}</p>
-                        {a.company_name && <p className="text-xs text-muted-foreground">{a.company_name}</p>}
+                        {a.company_name && (
+                          <p className="text-xs text-muted-foreground">{a.company_name}</p>
+                        )}
                       </div>
-                      <Badge variant="secondary" className="text-xs">{a.status}</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {a.status}
+                      </Badge>
                     </CardContent>
                   </Card>
                 ))

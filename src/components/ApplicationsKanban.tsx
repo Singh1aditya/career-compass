@@ -114,7 +114,9 @@ function DroppableColumn({
   const { setNodeRef, isOver } = useDroppable({ id: status });
   return (
     <div className="flex flex-col w-72 shrink-0">
-      <div className={`px-3 py-2 rounded-t-md ${STATUS_COLOR[status]} flex items-center justify-between`}>
+      <div
+        className={`px-3 py-2 rounded-t-md ${STATUS_COLOR[status]} flex items-center justify-between`}
+      >
         <span className="text-xs font-semibold uppercase tracking-wide">
           {STATUS_LABEL[status]}
         </span>
@@ -129,9 +131,7 @@ function DroppableColumn({
         }`}
       >
         {applications.length === 0 && (
-          <div className="text-center text-xs text-muted-foreground py-6">
-            Drop here
-          </div>
+          <div className="text-center text-xs text-muted-foreground py-6">Drop here</div>
         )}
         {applications.map((app) => (
           <DraggableCard key={app.id} app={app} />
@@ -143,14 +143,15 @@ function DroppableColumn({
 
 export function ApplicationsKanban({ applications, onChange }: Props) {
   const [activeApp, setActiveApp] = useState<Application | null>(null);
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  const byStatus = STATUSES.reduce((acc, s) => {
-    acc[s] = applications.filter((a) => a.status === s);
-    return acc;
-  }, {} as Record<string, Application[]>);
+  const byStatus = STATUSES.reduce(
+    (acc, s) => {
+      acc[s] = applications.filter((a) => a.status === s);
+      return acc;
+    },
+    {} as Record<string, Application[]>,
+  );
 
   const handleDragStart = (e: DragStartEvent) => {
     setActiveApp((e.active.data.current as { app: Application })?.app ?? null);
@@ -180,19 +181,13 @@ export function ApplicationsKanban({ applications, onChange }: Props) {
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex gap-3 overflow-x-auto pb-3">
         {STATUSES.map((s) => (
           <DroppableColumn key={s} status={s} applications={byStatus[s]} />
         ))}
       </div>
-      <DragOverlay>
-        {activeApp ? <ApplicationCard app={activeApp} /> : null}
-      </DragOverlay>
+      <DragOverlay>{activeApp ? <ApplicationCard app={activeApp} /> : null}</DragOverlay>
     </DndContext>
   );
 }

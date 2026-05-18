@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "@tanstack/react-router";
@@ -95,11 +95,7 @@ export function ContactsPage() {
   const [sequences, setSequences] = useState<{ id: string; name: string }[]>([]);
   const [bulkSequenceId, setBulkSequenceId] = useState("");
 
-  useEffect(() => {
-    if (user) loadContacts();
-  }, [user, statusFilter]);
-
-  const loadContacts = async () => {
+  const loadContacts = useCallback(async () => {
     const { data } = await supabase
       .from("contacts")
       .select("*")
@@ -108,7 +104,11 @@ export function ContactsPage() {
     setContacts((data as Contact[]) ?? []);
     setCheckedIds(new Set());
     setLoading(false);
-  };
+  }, [statusFilter]);
+
+  useEffect(() => {
+    if (user) loadContacts();
+  }, [user, statusFilter, loadContacts]);
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -145,15 +145,19 @@ export function ContactsPage() {
 
   const SortIcon = ({ k }: { k: SortKey }) => {
     if (sortKey !== k) return <ArrowUpDown className="h-3 w-3 opacity-40" />;
-    return sortDir === "asc" ? (
-      <ArrowUp className="h-3 w-3" />
-    ) : (
-      <ArrowDown className="h-3 w-3" />
-    );
+    return sortDir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />;
   };
 
   const resetForm = () => {
-    setForm({ name: "", email: "", phone: "", company_name: "", role: "", contact_type: "other", notes: "" });
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      company_name: "",
+      role: "",
+      contact_type: "other",
+      notes: "",
+    });
     setSelectedContact(null);
   };
 
@@ -164,13 +168,19 @@ export function ContactsPage() {
         .from("contacts")
         .update({ ...form, updated_at: new Date().toISOString() })
         .eq("id", selectedContact.id);
-      if (error) { toast.error(error.message); return; }
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
       toast.success("Contact updated");
     } else {
       const { error } = await supabase
         .from("contacts")
         .insert({ ...form, user_id: DEFAULT_USER_ID });
-      if (error) { toast.error(error.message); return; }
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
       toast.success("Contact added");
     }
     setDialogOpen(false);
@@ -187,8 +197,7 @@ export function ContactsPage() {
 
   // --- Bulk helpers ---
   const allFilteredIds = filtered.map((c) => c.id);
-  const allChecked =
-    allFilteredIds.length > 0 && allFilteredIds.every((id) => checkedIds.has(id));
+  const allChecked = allFilteredIds.length > 0 && allFilteredIds.every((id) => checkedIds.has(id));
   const someChecked = allFilteredIds.some((id) => checkedIds.has(id));
 
   const toggleRow = (id: string) => {
@@ -211,20 +220,30 @@ export function ContactsPage() {
   const bulkArchive = async () => {
     const ids = Array.from(checkedIds);
     const newStatus = statusFilter === "active" ? "archived" : "active";
-    const { error } = await supabase
-      .from("contacts")
-      .update({ status: newStatus })
-      .in("id", ids);
-    if (error) { toast.error(error.message); return; }
-    toast.success(`${ids.length} contact${ids.length !== 1 ? "s" : ""} ${newStatus === "archived" ? "archived" : "restored"}`);
+    const { error } = await supabase.from("contacts").update({ status: newStatus }).in("id", ids);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(
+      `${ids.length} contact${ids.length !== 1 ? "s" : ""} ${newStatus === "archived" ? "archived" : "restored"}`,
+    );
     loadContacts();
   };
 
   const bulkDelete = async () => {
     const ids = Array.from(checkedIds);
-    if (!window.confirm(`Delete ${ids.length} contact${ids.length !== 1 ? "s" : ""}? This cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Delete ${ids.length} contact${ids.length !== 1 ? "s" : ""}? This cannot be undone.`,
+      )
+    )
+      return;
     const { error } = await supabase.from("contacts").delete().in("id", ids);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(`Deleted ${ids.length} contact${ids.length !== 1 ? "s" : ""}`);
     loadContacts();
   };
@@ -249,14 +268,20 @@ export function ContactsPage() {
       .upsert({ name: tagName, user_id: DEFAULT_USER_ID }, { onConflict: "name,user_id" })
       .select("id")
       .single();
-    if (tagErr) { toast.error(tagErr.message); return; }
+    if (tagErr) {
+      toast.error(tagErr.message);
+      return;
+    }
 
     // Link tag to each selected contact
     const rows = ids.map((contact_id) => ({ contact_id, tag_id: tagRow.id }));
     const { error } = await supabase
       .from("contact_tags")
       .upsert(rows, { onConflict: "contact_id,tag_id" });
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(`Tag "${tagName}" added to ${ids.length} contact${ids.length !== 1 ? "s" : ""}`);
     setBulkTagOpen(false);
     setBulkTagInput("");
@@ -274,7 +299,10 @@ export function ContactsPage() {
     const { error } = await supabase
       .from("sequence_recipients")
       .upsert(rows, { onConflict: "sequence_id,contact_id" });
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(`Enrolled ${ids.length} contact${ids.length !== 1 ? "s" : ""} in sequence`);
     setBulkEnrollOpen(false);
     setBulkSequenceId("");
@@ -297,35 +325,100 @@ export function ContactsPage() {
             {filtered.length} {filtered.length === 1 ? "contact" : "contacts"}
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
+        <Dialog
+          open={dialogOpen}
+          onOpenChange={(o) => {
+            setDialogOpen(o);
+            if (!o) resetForm();
+          }}
+        >
           <DialogTrigger asChild>
-            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Contact</Button>
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" /> Add Contact
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{selectedContact ? "Edit Contact" : "Add Contact"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <div><Label>Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Jane Smith" /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Email</Label><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="jane@co.com" /></div>
-                <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+1..." /></div>
+              <div>
+                <Label htmlFor="contact-name">Name *</Label>
+                <Input
+                  id="contact-name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Jane Smith"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Company</Label><Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} /></div>
-                <div><Label>Role</Label><Input value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} /></div>
+                <div>
+                  <Label htmlFor="contact-email">Email</Label>
+                  <Input
+                    id="contact-email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="jane@co.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact-phone">Phone</Label>
+                  <Input
+                    id="contact-phone"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    placeholder="+1..."
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="contact-company">Company</Label>
+                  <Input
+                    id="contact-company"
+                    value={form.company_name}
+                    onChange={(e) => setForm({ ...form, company_name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="contact-role">Role</Label>
+                  <Input
+                    id="contact-role"
+                    value={form.role}
+                    onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  />
+                </div>
               </div>
               <div>
-                <Label>Type</Label>
-                <Select value={form.contact_type} onValueChange={(v) => setForm({ ...form, contact_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Label htmlFor="contact-type">Type</Label>
+                <Select
+                  value={form.contact_type}
+                  onValueChange={(v) => setForm({ ...form, contact_type: v })}
+                >
+                  <SelectTrigger id="contact-type">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {contactTypes.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    {contactTypes.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} /></div>
-              <Button onClick={handleSave} className="w-full">{selectedContact ? "Update" : "Add"} Contact</Button>
+              <div>
+                <Label htmlFor="contact-notes">Notes</Label>
+                <Textarea
+                  id="contact-notes"
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <Button onClick={handleSave} className="w-full">
+                {selectedContact ? "Update" : "Add"} Contact
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -334,17 +427,30 @@ export function ContactsPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search contacts…" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
+          <Input
+            placeholder="Search contacts…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
         </div>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Type" /></SelectTrigger>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All types</SelectItem>
-            {contactTypes.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            {contactTypes.map((t) => (
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="archived">Archived</SelectItem>
@@ -353,12 +459,16 @@ export function ContactsPage() {
       </div>
 
       {loading ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">Loading...</CardContent></Card>
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">Loading...</CardContent>
+        </Card>
       ) : filtered.length === 0 ? (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">
-          <User className="h-10 w-10 mx-auto mb-2 opacity-50" />
-          <p>No contacts found. Add your first contact to get started!</p>
-        </CardContent></Card>
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            <User className="h-10 w-10 mx-auto mb-2 opacity-50" />
+            <p>No contacts found. Add your first contact to get started!</p>
+          </CardContent>
+        </Card>
       ) : (
         <Card>
           <CardContent className="p-0">
@@ -374,30 +484,50 @@ export function ContactsPage() {
                       />
                     </TableHead>
                     <TableHead>
-                      <button type="button" onClick={() => toggleSort("name")} className="flex items-center gap-1 hover:text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => toggleSort("name")}
+                        className="flex items-center gap-1 hover:text-foreground"
+                      >
                         Name <SortIcon k="name" />
                       </button>
                     </TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead>
-                      <button type="button" onClick={() => toggleSort("company_name")} className="flex items-center gap-1 hover:text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => toggleSort("company_name")}
+                        className="flex items-center gap-1 hover:text-foreground"
+                      >
                         Company <SortIcon k="company_name" />
                       </button>
                     </TableHead>
                     <TableHead>
-                      <button type="button" onClick={() => toggleSort("role")} className="flex items-center gap-1 hover:text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => toggleSort("role")}
+                        className="flex items-center gap-1 hover:text-foreground"
+                      >
                         Role <SortIcon k="role" />
                       </button>
                     </TableHead>
                     <TableHead>
-                      <button type="button" onClick={() => toggleSort("contact_type")} className="flex items-center gap-1 hover:text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => toggleSort("contact_type")}
+                        className="flex items-center gap-1 hover:text-foreground"
+                      >
                         Type <SortIcon k="contact_type" />
                       </button>
                     </TableHead>
                     <TableHead className="max-w-[200px]">Notes</TableHead>
                     <TableHead>
-                      <button type="button" onClick={() => toggleSort("created_at")} className="flex items-center gap-1 hover:text-foreground">
+                      <button
+                        type="button"
+                        onClick={() => toggleSort("created_at")}
+                        className="flex items-center gap-1 hover:text-foreground"
+                      >
                         Created <SortIcon k="created_at" />
                       </button>
                     </TableHead>
@@ -425,7 +555,10 @@ export function ContactsPage() {
                       <TableCell>{c.company_name || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{c.role || "—"}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={`text-xs ${typeColors[c.contact_type]}`}>
+                        <Badge
+                          variant="secondary"
+                          className={`text-xs ${typeColors[c.contact_type]}`}
+                        >
                           {c.contact_type}
                         </Badge>
                       </TableCell>
@@ -440,9 +573,16 @@ export function ContactsPage() {
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0"
-                          onClick={(e) => { e.stopPropagation(); toggleArchive(c); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleArchive(c);
+                          }}
                         >
-                          {c.status === "active" ? <Archive className="h-3.5 w-3.5" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                          {c.status === "active" ? (
+                            <Archive className="h-3.5 w-3.5" />
+                          ) : (
+                            <RotateCcw className="h-3.5 w-3.5" />
+                          )}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -457,7 +597,9 @@ export function ContactsPage() {
       {/* Bulk tag dialog */}
       <Dialog open={bulkTagOpen} onOpenChange={setBulkTagOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Add tag to {checkedIds.size} contacts</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Add tag to {checkedIds.size} contacts</DialogTitle>
+          </DialogHeader>
           <div className="space-y-3">
             <Input
               placeholder="e.g. recruiter, hot-lead, bay-area"
@@ -466,7 +608,9 @@ export function ContactsPage() {
               onKeyDown={(e) => e.key === "Enter" && bulkAddTag()}
               autoFocus
             />
-            <Button className="w-full" onClick={bulkAddTag} disabled={!bulkTagInput.trim()}>Add tag</Button>
+            <Button className="w-full" onClick={bulkAddTag} disabled={!bulkTagInput.trim()}>
+              Add tag
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -474,15 +618,25 @@ export function ContactsPage() {
       {/* Bulk enroll dialog */}
       <Dialog open={bulkEnrollOpen} onOpenChange={setBulkEnrollOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Enroll {checkedIds.size} contacts in sequence</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Enroll {checkedIds.size} contacts in sequence</DialogTitle>
+          </DialogHeader>
           <div className="space-y-3">
             <Select value={bulkSequenceId} onValueChange={setBulkSequenceId}>
-              <SelectTrigger><SelectValue placeholder="Choose sequence…" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Choose sequence…" />
+              </SelectTrigger>
               <SelectContent>
-                {sequences.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                {sequences.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            <Button className="w-full" onClick={bulkEnrollInSequence} disabled={!bulkSequenceId}>Enroll</Button>
+            <Button className="w-full" onClick={bulkEnrollInSequence} disabled={!bulkSequenceId}>
+              Enroll
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -493,7 +647,12 @@ export function ContactsPage() {
         actions={[
           {
             label: statusFilter === "active" ? "Archive" : "Restore",
-            icon: statusFilter === "active" ? <Archive className="h-3 w-3" /> : <RotateCcw className="h-3 w-3" />,
+            icon:
+              statusFilter === "active" ? (
+                <Archive className="h-3 w-3" />
+              ) : (
+                <RotateCcw className="h-3 w-3" />
+              ),
             variant: "outline",
             onClick: bulkArchive,
           },
@@ -507,7 +666,10 @@ export function ContactsPage() {
             label: "Enroll in sequence",
             icon: <ListPlus className="h-3 w-3" />,
             variant: "outline",
-            onClick: () => { loadSequences(); setBulkEnrollOpen(true); },
+            onClick: () => {
+              loadSequences();
+              setBulkEnrollOpen(true);
+            },
           },
           {
             label: "Delete",

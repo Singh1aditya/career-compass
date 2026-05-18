@@ -3,13 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  RefreshCw,
-  Activity,
-} from "lucide-react";
+import { CheckCircle, XCircle, Clock, RefreshCw, Activity } from "lucide-react";
 import { format } from "date-fns";
 
 interface FunctionStatus {
@@ -24,7 +18,11 @@ interface FunctionStatus {
 
 const FUNCTIONS: Pick<FunctionStatus, "name" | "description" | "category">[] = [
   { name: "send-daily-digest", description: "Daily digest email", category: "email" },
-  { name: "generate-auto-followups", description: "Auto follow-up generator", category: "automation" },
+  {
+    name: "generate-auto-followups",
+    description: "Auto follow-up generator",
+    category: "automation",
+  },
   { name: "scan-job-emails", description: "Job email scanner", category: "email" },
   { name: "gmail-poll-replies", description: "Gmail reply poller", category: "email" },
   { name: "process-pending-sends", description: "Pending send processor", category: "email" },
@@ -42,7 +40,7 @@ const CATEGORY_COLORS: Record<FunctionStatus["category"], string> = {
 
 export function HealthPage() {
   const [statuses, setStatuses] = useState<FunctionStatus[]>(
-    FUNCTIONS.map((f) => ({ ...f, status: "idle" }))
+    FUNCTIONS.map((f) => ({ ...f, status: "idle" })),
   );
   const [checking, setChecking] = useState(false);
   const [lastRun, setLastRun] = useState<Date | null>(null);
@@ -81,7 +79,7 @@ export function HealthPage() {
             errorMsg: e instanceof Error ? e.message : "Unknown error",
           };
         }
-      })
+      }),
     );
 
     setStatuses(results);
@@ -99,7 +97,8 @@ export function HealthPage() {
   const StatusIcon = ({ status }: { status: FunctionStatus["status"] }) => {
     if (status === "ok") return <CheckCircle className="h-4 w-4 text-green-600" />;
     if (status === "error") return <XCircle className="h-4 w-4 text-destructive" />;
-    if (status === "checking") return <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" />;
+    if (status === "checking")
+      return <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" />;
     return <Clock className="h-4 w-4 text-muted-foreground" />;
   };
 
@@ -113,15 +112,11 @@ export function HealthPage() {
             <Activity className="h-6 w-6 text-primary" /> System Health
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Edge function reachability · {lastRun ? `Last checked ${format(lastRun, "h:mm:ss a")}` : "Not checked yet"}
+            Edge function reachability ·{" "}
+            {lastRun ? `Last checked ${format(lastRun, "h:mm:ss a")}` : "Not checked yet"}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={checkAll}
-          disabled={checking}
-        >
+        <Button variant="outline" size="sm" onClick={checkAll} disabled={checking}>
           <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${checking ? "animate-spin" : ""}`} />
           {checking ? "Checking…" : "Re-check all"}
         </Button>
@@ -185,9 +180,7 @@ export function HealthPage() {
                     </div>
                     <div className="text-right shrink-0">
                       {fn.latencyMs !== undefined && (
-                        <p className="text-xs text-muted-foreground">
-                          {fn.latencyMs}ms
-                        </p>
+                        <p className="text-xs text-muted-foreground">{fn.latencyMs}ms</p>
                       )}
                       {fn.lastChecked && (
                         <p className="text-[10px] text-muted-foreground/60">

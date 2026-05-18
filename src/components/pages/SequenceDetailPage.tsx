@@ -159,10 +159,7 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
   };
 
   const deleteStep = async (stepId: string) => {
-    const { error } = await supabase
-      .from("sequence_steps")
-      .delete()
-      .eq("id", stepId);
+    const { error } = await supabase.from("sequence_steps").delete().eq("id", stepId);
 
     if (error) {
       toast.error(error.message);
@@ -254,9 +251,7 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                       <Label>Step Type</Label>
                       <Select
                         value={stepForm.step_type}
-                        onValueChange={(v) =>
-                          setStepForm({ ...stepForm, step_type: v })
-                        }
+                        onValueChange={(v) => setStepForm({ ...stepForm, step_type: v })}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -298,7 +293,9 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                       placeholder="e.g., Checking in on {{role}} role at {{company}}"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Variables: <code>{"{{first_name}}"}</code>, <code>{"{{company}}"}</code>, <code>{"{{role}}"}</code>, <code>{"{{my_name}}"}</code>, <code>{"{{my_signature}}"}</code>
+                      Variables: <code>{"{{first_name}}"}</code>, <code>{"{{company}}"}</code>,{" "}
+                      <code>{"{{role}}"}</code>, <code>{"{{my_name}}"}</code>,{" "}
+                      <code>{"{{my_signature}}"}</code>
                     </p>
                   </div>
                   <div>
@@ -313,12 +310,19 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                         onResult={(text) => {
                           const lines = text.split("\n");
                           const subjectLine = lines.find((l) => l.startsWith("Subject:"));
-                          const bodyStart = lines.findIndex((l) => l.trim() === "" && lines.indexOf(subjectLine ?? "") !== -1) + 1;
+                          const bodyStart =
+                            lines.findIndex(
+                              (l) => l.trim() === "" && lines.indexOf(subjectLine ?? "") !== -1,
+                            ) + 1;
                           if (subjectLine && !stepForm.template_subject) {
                             setStepForm((f) => ({
                               ...f,
                               template_subject: subjectLine.replace(/^Subject:\s*/i, ""),
-                              template_body: lines.slice(bodyStart || 2).join("\n").trim() || text,
+                              template_body:
+                                lines
+                                  .slice(bodyStart || 2)
+                                  .join("\n")
+                                  .trim() || text,
                             }));
                           } else {
                             setStepForm((f) => ({ ...f, template_body: text }));
@@ -387,9 +391,7 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                     <CardContent className="space-y-2">
                       <div>
                         <p className="text-sm font-medium">Subject:</p>
-                        <p className="text-sm text-muted-foreground">
-                          {step.template_subject}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{step.template_subject}</p>
                       </div>
                       <div>
                         <p className="text-sm font-medium">Body:</p>
@@ -426,9 +428,7 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                 <Users className="h-10 w-10 mx-auto mb-2 opacity-50" />
                 <p>No recipients yet. Add contacts to this sequence!</p>
                 {steps.length === 0 && (
-                  <p className="text-xs mt-2">
-                    Add email steps first, then add recipients.
-                  </p>
+                  <p className="text-xs mt-2">Add email steps first, then add recipients.</p>
                 )}
               </CardContent>
             </Card>
@@ -438,16 +438,10 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                 <table className="w-full text-sm">
                   <thead className="bg-muted">
                     <tr>
-                      <th className="px-4 py-2 text-left font-medium">
-                        Contact
-                      </th>
+                      <th className="px-4 py-2 text-left font-medium">Contact</th>
                       <th className="px-4 py-2 text-left font-medium">State</th>
-                      <th className="px-4 py-2 text-left font-medium">
-                        Enrolled
-                      </th>
-                      <th className="px-4 py-2 text-left font-medium">
-                        Next Send
-                      </th>
+                      <th className="px-4 py-2 text-left font-medium">Enrolled</th>
+                      <th className="px-4 py-2 text-left font-medium">Next Send</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -456,9 +450,7 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                         <td className="px-4 py-3">
                           <div>
                             <p className="font-medium">{r.contact?.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {r.contact?.email}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{r.contact?.email}</p>
                           </div>
                         </td>
                         <td className="px-4 py-3">
@@ -468,9 +460,7 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
                           {new Date(r.enrolled_at).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">
-                          {r.next_send_at
-                            ? new Date(r.next_send_at).toLocaleDateString()
-                            : "—"}
+                          {r.next_send_at ? new Date(r.next_send_at).toLocaleDateString() : "—"}
                         </td>
                       </tr>
                     ))}

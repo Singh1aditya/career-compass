@@ -77,7 +77,10 @@ export function GlobalSearch({ collapsed = false }: { collapsed?: boolean } = {}
           ref={inputRef}
           placeholder="Search... (⌘K)"
           value={query}
-          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setOpen(true);
+          }}
           onFocus={() => setOpen(true)}
           className="pl-8 pr-7 h-8 text-xs"
         />
@@ -86,7 +89,10 @@ export function GlobalSearch({ collapsed = false }: { collapsed?: boolean } = {}
             type="button"
             aria-label="Clear search"
             title="Clear search"
-            onClick={() => { setQuery(""); inputRef.current?.focus(); }}
+            onClick={() => {
+              setQuery("");
+              inputRef.current?.focus();
+            }}
             className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
@@ -96,9 +102,7 @@ export function GlobalSearch({ collapsed = false }: { collapsed?: boolean } = {}
 
       {open && query.length >= 2 && (
         <div className="absolute left-2 right-2 top-full mt-1 z-50 bg-popover border rounded-md shadow-lg max-h-[60vh] overflow-y-auto">
-          {loading && (
-            <div className="p-3 text-xs text-muted-foreground">Searching...</div>
-          )}
+          {loading && <div className="p-3 text-xs text-muted-foreground">Searching...</div>}
 
           {!loading && total === 0 && (
             <div className="p-3 text-xs text-muted-foreground">No results</div>
@@ -139,10 +143,14 @@ export function GlobalSearch({ collapsed = false }: { collapsed?: boolean } = {}
                 >
                   <div className="flex items-center gap-1.5">
                     <span className="font-medium truncate">{a.role_title}</span>
-                    <Badge variant="secondary" className="text-[10px] h-4 px-1">{a.status}</Badge>
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                      {a.status}
+                    </Badge>
                   </div>
                   {a.company_name && (
-                    <div className="text-[11px] text-muted-foreground truncate">{a.company_name}</div>
+                    <div className="text-[11px] text-muted-foreground truncate">
+                      {a.company_name}
+                    </div>
                   )}
                 </button>
               ))}
@@ -162,7 +170,9 @@ export function GlobalSearch({ collapsed = false }: { collapsed?: boolean } = {}
                   className="w-full text-left px-3 py-1.5 hover:bg-accent text-xs"
                 >
                   <div className="font-medium">{c.name}</div>
-                  {c.industry && <div className="text-[11px] text-muted-foreground">{c.industry}</div>}
+                  {c.industry && (
+                    <div className="text-[11px] text-muted-foreground">{c.industry}</div>
+                  )}
                 </button>
               ))}
             </div>
@@ -177,8 +187,8 @@ export function GlobalSearch({ collapsed = false }: { collapsed?: boolean } = {}
                 const path = n.contact_id
                   ? `/contacts/${n.contact_id}`
                   : n.application_id
-                  ? `/applications/${n.application_id}`
-                  : "/search";
+                    ? `/applications/${n.application_id}`
+                    : "/search";
                 return (
                   <button
                     key={n.id}

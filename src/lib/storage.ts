@@ -35,7 +35,7 @@ export function validateFile(file: File): string | null {
 export async function uploadAttachment(
   file: File,
   parent: { application_id?: string; contact_id?: string; company_id?: string },
-  kind: string = "other"
+  kind: string = "other",
 ): Promise<{ data: Attachment | null; error: string | null }> {
   const validationError = validateFile(file);
   if (validationError) return { data: null, error: validationError };
@@ -72,9 +72,7 @@ export async function uploadAttachment(
 }
 
 export async function getSignedUrl(path: string): Promise<string | null> {
-  const { data } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrl(path, 60 * 60); // 1 hour
+  const { data } = await supabase.storage.from(BUCKET).createSignedUrl(path, 60 * 60); // 1 hour
   return data?.signedUrl ?? null;
 }
 
@@ -85,9 +83,11 @@ export async function deleteAttachment(id: string, path: string): Promise<string
   return null;
 }
 
-export async function fetchAttachments(
-  parent: { application_id?: string; contact_id?: string; company_id?: string }
-): Promise<Attachment[]> {
+export async function fetchAttachments(parent: {
+  application_id?: string;
+  contact_id?: string;
+  company_id?: string;
+}): Promise<Attachment[]> {
   const key = Object.keys(parent)[0] as keyof typeof parent;
   const val = parent[key];
   const { data } = await db

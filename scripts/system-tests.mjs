@@ -2,13 +2,17 @@
 // Run: SEED_SUPABASE_KEY=<service-role> node scripts/system-tests.mjs
 import { createClient } from "@supabase/supabase-js";
 
-const URL = "https://cpbntgdqtvqrensrqjmy.supabase.co";
+const URL = process.env.SEED_SUPABASE_URL;
 const KEY = process.env.SEED_SUPABASE_KEY;
-if (!KEY) { console.error("Set SEED_SUPABASE_KEY"); process.exit(1); }
+if (!URL || !KEY) {
+  console.error("Set SEED_SUPABASE_URL and SEED_SUPABASE_KEY env vars.");
+  process.exit(1);
+}
 const sb = createClient(URL, KEY);
 const USER = "00000000-0000-0000-0000-000000000000";
 
-let pass = 0, fail = 0;
+let pass = 0,
+  fail = 0;
 const results = [];
 
 async function test(name, fn) {
@@ -26,14 +30,38 @@ function assert(cond, msg) {
   if (!cond) throw new Error(msg);
 }
 
-const STATUSES = ["wishlist","applied","screening","interviewing","offer","rejected","withdrawn"];
+const STATUSES = [
+  "wishlist",
+  "applied",
+  "screening",
+  "interviewing",
+  "offer",
+  "rejected",
+  "withdrawn",
+];
 
 console.log("\n=== SYSTEM TESTS ===\n");
 
 console.log("[1] Schema integrity");
 
 await test("All 15 tables exist", async () => {
-  const tables = ["profiles","companies","contacts","tags","contact_tags","applications","interactions","notes","follow_ups","sequences","sequence_steps","sequence_recipients","sequence_sends","oauth_tokens","processed_emails"];
+  const tables = [
+    "profiles",
+    "companies",
+    "contacts",
+    "tags",
+    "contact_tags",
+    "applications",
+    "interactions",
+    "notes",
+    "follow_ups",
+    "sequences",
+    "sequence_steps",
+    "sequence_recipients",
+    "sequence_sends",
+    "oauth_tokens",
+    "processed_emails",
+  ];
   for (const t of tables) {
     const { error } = await sb.from(t).select("*", { count: "exact", head: true });
     assert(!error, `${t} unreadable: ${error?.message}`);
@@ -80,7 +108,10 @@ console.log("\n[3] Search query patterns (mirror src/lib/search.ts)");
 await test("Search 'anthropic' finds contacts and companies", async () => {
   const pat = "%anthropic%";
   const [c, comp] = await Promise.all([
-    sb.from("contacts").select("name").or(`name.ilike.${pat},email.ilike.${pat},company_name.ilike.${pat}`),
+    sb
+      .from("contacts")
+      .select("name")
+      .or(`name.ilike.${pat},email.ilike.${pat},company_name.ilike.${pat}`),
     sb.from("companies").select("name").ilike("name", pat),
   ]);
   assert(c.data.length >= 3, `contacts: expected >=3, got ${c.data.length}`);
@@ -93,17 +124,27 @@ await test("Search by phone number works", async () => {
 });
 
 await test("Search by notes content works", async () => {
-  const { data } = await sb.from("applications").select("role_title").or("notes.ilike.%Negotiating%");
+  const { data } = await sb
+    .from("applications")
+    .select("role_title")
+    .or("notes.ilike.%Negotiating%");
   assert(data.length >= 1, `expected match for 'Negotiating' in notes, got ${data.length}`);
 });
 
 console.log("\n[4] Kanban operations");
 
 await test("Move application from screening → interviewing", async () => {
-  const { data: before } = await sb.from("applications").select("id, status").eq("status", "screening").limit(1);
+  const { data: before } = await sb
+    .from("applications")
+    .select("id, status")
+    .eq("status", "screening")
+    .limit(1);
   assert(before.length === 1, "no screening app to move");
   const id = before[0].id;
-  const { error } = await sb.from("applications").update({ status: "interviewing", updated_at: new Date().toISOString() }).eq("id", id);
+  const { error } = await sb
+    .from("applications")
+    .update({ status: "interviewing", updated_at: new Date().toISOString() })
+    .eq("id", id);
   assert(!error, error?.message);
   const { data: after } = await sb.from("applications").select("status").eq("id", id).single();
   assert(after.status === "interviewing", `status: ${after.status}`);
@@ -131,7 +172,8 @@ await test("All interactions reference valid contacts", async () => {
   const aIds = new Set(apps.map((a) => a.id));
   for (const i of ints) {
     if (i.contact_id) assert(cIds.has(i.contact_id), `dangling contact_id ${i.contact_id}`);
-    if (i.application_id) assert(aIds.has(i.application_id), `dangling application_id ${i.application_id}`);
+    if (i.application_id)
+      assert(aIds.has(i.application_id), `dangling application_id ${i.application_id}`);
   }
 });
 
@@ -235,34 +277,52 @@ for (const [subject, expectedRole, expectedCompany] of extractFixtures) {
 console.log("\n[8] Real-world insertion paths (mirrors what the app UI does)");
 
 await test("Insert + delete contact (mirrors ContactsPage form)", async () => {
-  const { data, error } = await sb.from("contacts").insert({
-    user_id: USER,
-    name: "_test_insert_",
-    email: "test@example.com",
-    contact_type: "other",
-    status: "active",
-  }).select().single();
+  const { data, error } = await sb
+    .from("contacts")
+    .insert({
+      user_id: USER,
+      name: "_test_insert_",
+      email: "test@example.com",
+      contact_type: "other",
+      status: "active",
+    })
+    .select()
+    .single();
   assert(!error, error?.message);
   assert(data.id, "no id returned");
   await sb.from("contacts").delete().eq("id", data.id);
 });
 
 await test("Insert + delete application (mirrors ApplicationsPage form)", async () => {
-  const { data, error } = await sb.from("applications").insert({
-    user_id: USER,
-    role_title: "_test_role_",
-    status: "wishlist",
-  }).select().single();
+  const { data, error } = await sb
+    .from("applications")
+    .insert({
+      user_id: USER,
+      role_title: "_test_role_",
+      status: "wishlist",
+    })
+    .select()
+    .single();
   assert(!error, error?.message);
   await sb.from("applications").delete().eq("id", data.id);
 });
 
 await test("Status update preserves row (mirrors kanban drag)", async () => {
-  const { data: created } = await sb.from("applications").insert({
-    user_id: USER, role_title: "_kanban_test_", status: "wishlist",
-  }).select().single();
+  const { data: created } = await sb
+    .from("applications")
+    .insert({
+      user_id: USER,
+      role_title: "_kanban_test_",
+      status: "wishlist",
+    })
+    .select()
+    .single();
   await sb.from("applications").update({ status: "interviewing" }).eq("id", created.id);
-  const { data: refetched } = await sb.from("applications").select("*").eq("id", created.id).single();
+  const { data: refetched } = await sb
+    .from("applications")
+    .select("*")
+    .eq("id", created.id)
+    .single();
   assert(refetched.status === "interviewing", `status: ${refetched.status}`);
   assert(refetched.role_title === "_kanban_test_", "row corrupted");
   await sb.from("applications").delete().eq("id", created.id);

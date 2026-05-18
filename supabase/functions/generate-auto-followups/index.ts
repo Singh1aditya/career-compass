@@ -23,7 +23,7 @@ serve(async (req: Request) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
   // Check if auto-followups are enabled for this user
@@ -92,14 +92,16 @@ serve(async (req: Request) => {
   // --- Scenario 2: sequence recipients stuck in initial_sent with no reply ---
   const { data: stuckRecipients } = await supabase
     .from("sequence_recipients")
-    .select(`
+    .select(
+      `
       id,
       contact_id,
       sequence_id,
       next_send_at,
       contacts(name),
       sequences(name)
-    `)
+    `,
+    )
     .eq("state", "initial_sent")
     .lt("next_send_at", cutoff);
 

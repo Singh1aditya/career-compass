@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req: Request) => {
@@ -15,7 +14,7 @@ serve(async (req: Request) => {
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     import { DEFAULT_USER_ID } from "../_shared/constants.ts";
@@ -38,7 +37,7 @@ serve(async (req: Request) => {
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -57,7 +56,7 @@ serve(async (req: Request) => {
           sequence_id,
           contacts!inner(id, name, email)
         )
-      `
+      `,
       )
       .not("gmail_thread_id", "is", null);
 
@@ -71,7 +70,7 @@ serve(async (req: Request) => {
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -92,7 +91,7 @@ serve(async (req: Request) => {
         const replyInfo = await checkThreadForReply(
           threadId,
           recipientData.contacts.email,
-          oauthToken.access_token
+          oauthToken.access_token,
         );
 
         checked++;
@@ -156,7 +155,7 @@ serve(async (req: Request) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error: any) {
     console.error("[Function Error]", error);
@@ -170,7 +169,7 @@ serve(async (req: Request) => {
       {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 });
@@ -192,12 +191,12 @@ function looksLikeOOO(subject: string, snippet: string): boolean {
 async function checkThreadForReply(
   threadId: string,
   senderEmail: string,
-  accessToken: string
+  accessToken: string,
 ): Promise<{ hasReply: boolean; isOutOfOffice: boolean }> {
   try {
     const response = await fetch(
       `https://www.googleapis.com/gmail/v1/users/me/threads/${threadId}`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
+      { headers: { Authorization: `Bearer ${accessToken}` } },
     );
 
     if (!response.ok) return { hasReply: false, isOutOfOffice: false };

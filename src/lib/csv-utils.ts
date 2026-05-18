@@ -27,22 +27,12 @@ export interface ImportResult {
 }
 
 const DEFAULT_CONTACT_TYPE = "other";
-const CONTACT_FIELDS = [
-  "name",
-  "email",
-  "phone",
-  "company_name",
-  "role",
-  "contact_type",
-  "notes",
-];
+const CONTACT_FIELDS = ["name", "email", "phone", "company_name", "role", "contact_type", "notes"];
 
 /**
  * Parse CSV file and return rows
  */
-export function parseCSVFile(
-  file: File
-): Promise<{ rows: CSVRow[]; columns: string[] }> {
+export function parseCSVFile(file: File): Promise<{ rows: CSVRow[]; columns: string[] }> {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
@@ -72,11 +62,7 @@ export function detectColumnMappings(csvColumns: string[]): MappingConfig {
     const lowerCol = csvCol.toLowerCase();
 
     // Try to match CSV column to database field
-    if (
-      lowerCol.includes("name") ||
-      lowerCol.includes("contact") ||
-      lowerCol === "person"
-    ) {
+    if (lowerCol.includes("name") || lowerCol.includes("contact") || lowerCol === "person") {
       mapping[csvCol] = "name";
     } else if (lowerCol.includes("email") || lowerCol === "e-mail") {
       mapping[csvCol] = "email";
@@ -101,10 +87,7 @@ export function detectColumnMappings(csvColumns: string[]): MappingConfig {
 /**
  * Convert CSV row to contact using mapping
  */
-export function mapRowToContact(
-  row: CSVRow,
-  mapping: MappingConfig
-): ContactPreview {
+export function mapRowToContact(row: CSVRow, mapping: MappingConfig): ContactPreview {
   const contact: ContactPreview = {
     name: "",
     contact_type: DEFAULT_CONTACT_TYPE,
@@ -138,7 +121,7 @@ export function mapRowToContact(
  */
 export function findDuplicates(
   contacts: ContactPreview[],
-  existingEmails: Set<string>
+  existingEmails: Set<string>,
 ): ContactPreview[] {
   const result: ContactPreview[] = [];
   const seenEmails = new Set<string>();
@@ -233,11 +216,7 @@ function isValidPhone(phone: string): boolean {
 /**
  * Generate import summary
  */
-export function generateImportSummary(
-  total: number,
-  valid: number,
-  duplicates: number
-) {
+export function generateImportSummary(total: number, valid: number, duplicates: number) {
   return {
     total,
     valid,

@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 import { DEFAULT_USER_ID } from "../_shared/constants.ts";
@@ -33,10 +32,10 @@ serve(async (req: Request) => {
     const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
 
     if (!clientId || !clientSecret) {
-      return new Response(
-        JSON.stringify({ error: "Google OAuth credentials not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Google OAuth credentials not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Exchange authorization code for tokens using the redirect_uri the
@@ -78,7 +77,7 @@ serve(async (req: Request) => {
     // travel back through the browser.
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     const { error: dbError } = await supabase.from("oauth_tokens").upsert(
@@ -92,7 +91,7 @@ serve(async (req: Request) => {
         email,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id,provider" }
+      { onConflict: "user_id,provider" },
     );
 
     if (dbError) {
@@ -100,15 +99,14 @@ serve(async (req: Request) => {
       throw new Error("Failed to save Gmail credentials");
     }
 
-    return new Response(
-      JSON.stringify({ success: true, email }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ success: true, email }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Exchange error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

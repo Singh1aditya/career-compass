@@ -80,7 +80,7 @@ export function InsightsPage() {
     (d: number) => {
       navigate({ search: { days: d } });
     },
-    [navigate]
+    [navigate],
   );
 
   const [loading, setLoading] = useState(true);
@@ -194,22 +194,14 @@ export function InsightsPage() {
                     margin={{ top: 0, right: 24, left: 8, bottom: 0 }}
                   >
                     <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
-                    <YAxis
-                      type="category"
-                      dataKey="label"
-                      width={90}
-                      tick={{ fontSize: 12 }}
-                    />
+                    <YAxis type="category" dataKey="label" width={90} tick={{ fontSize: 12 }} />
                     <Tooltip
                       formatter={(value: number) => [value, "Applications"]}
                       cursor={{ fill: "hsl(var(--muted))" }}
                     />
                     <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                       {pipelineFunnel.map((entry) => (
-                        <rect
-                          key={entry.status}
-                          fill={STATUS_HEX[entry.status] ?? "#94a3b8"}
-                        />
+                        <rect key={entry.status} fill={STATUS_HEX[entry.status] ?? "#94a3b8"} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -282,14 +274,11 @@ export function InsightsPage() {
                 <tbody>
                   {stages
                     .sort(
-                      (a, b) =>
-                        PIPELINE_ORDER.indexOf(a.status) - PIPELINE_ORDER.indexOf(b.status)
+                      (a, b) => PIPELINE_ORDER.indexOf(a.status) - PIPELINE_ORDER.indexOf(b.status),
                     )
                     .map((row) => (
                       <tr key={row.status} className="border-b last:border-0">
-                        <td className="py-2">
-                          {statusLabel[row.status] ?? row.status}
-                        </td>
+                        <td className="py-2">{statusLabel[row.status] ?? row.status}</td>
                         <td className="py-2 text-right tabular-nums">{row.medianDays}</td>
                       </tr>
                     ))}
@@ -311,10 +300,7 @@ export function InsightsPage() {
               <p className="text-muted-foreground text-sm">No data yet</p>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
-                <LineChart
-                  data={trend}
-                  margin={{ top: 4, right: 16, left: 0, bottom: 0 }}
-                >
+                <LineChart data={trend} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis
                     dataKey="week"

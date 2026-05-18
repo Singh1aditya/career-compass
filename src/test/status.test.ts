@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  APPLICATION_STATUSES,
-  PIPELINE_STATUSES,
-  statusColors,
-  statusLabel,
-} from "@/lib/status";
+import { APPLICATION_STATUSES, PIPELINE_STATUSES, statusColors, statusLabel } from "@/lib/status";
 
 describe("APPLICATION_STATUSES", () => {
   it("contains all expected statuses", () => {

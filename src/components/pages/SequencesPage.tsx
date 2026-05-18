@@ -83,7 +83,7 @@ export function SequencesPage() {
   };
 
   const filtered = sequences.filter((s) =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleCreateSequence = async () => {

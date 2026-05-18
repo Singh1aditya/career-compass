@@ -57,7 +57,7 @@ export function DigestPreview() {
 
       const applied = (statsRes.data ?? []).filter((a) => a.status !== "wishlist").length;
       const interviews = (statsRes.data ?? []).filter((a) =>
-        ["screening", "interviewing"].includes(a.status)
+        ["screening", "interviewing"].includes(a.status),
       ).length;
 
       setData({
@@ -89,13 +89,21 @@ export function DigestPreview() {
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Daily Digest Preview</span>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={load} disabled={loading}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={load}
+              disabled={loading}
+            >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
             </Button>
           </DialogTitle>
         </DialogHeader>
 
-        {loading && <p className="text-sm text-muted-foreground py-4 text-center">Loading preview…</p>}
+        {loading && (
+          <p className="text-sm text-muted-foreground py-4 text-center">Loading preview…</p>
+        )}
 
         {data && !loading && (
           <div className="space-y-5 text-sm font-mono bg-muted/40 rounded-lg p-4 leading-relaxed">
@@ -107,18 +115,31 @@ export function DigestPreview() {
             <div>
               <p className="font-semibold">📊 This week</p>
               <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                <li>• {data.weekStats.applied} application{data.weekStats.applied !== 1 ? "s" : ""} submitted</li>
-                <li>• {data.weekStats.replies} repl{data.weekStats.replies !== 1 ? "ies" : "y"} received</li>
-                <li>• {data.weekStats.interviews} interview{data.weekStats.interviews !== 1 ? "s" : ""} in progress</li>
+                <li>
+                  • {data.weekStats.applied} application{data.weekStats.applied !== 1 ? "s" : ""}{" "}
+                  submitted
+                </li>
+                <li>
+                  • {data.weekStats.replies} repl{data.weekStats.replies !== 1 ? "ies" : "y"}{" "}
+                  received
+                </li>
+                <li>
+                  • {data.weekStats.interviews} interview
+                  {data.weekStats.interviews !== 1 ? "s" : ""} in progress
+                </li>
               </ul>
             </div>
 
             {data.recentReplies.length > 0 && (
               <div>
-                <p className="font-semibold">📬 Replies since yesterday ({data.recentReplies.length})</p>
+                <p className="font-semibold">
+                  📬 Replies since yesterday ({data.recentReplies.length})
+                </p>
                 <ul className="mt-1 space-y-0.5 text-muted-foreground">
                   {data.recentReplies.map((r) => (
-                    <li key={r.id}>• {r.summary ?? "(no summary)"} — {format(new Date(r.date), "h:mm a")}</li>
+                    <li key={r.id}>
+                      • {r.summary ?? "(no summary)"} — {format(new Date(r.date), "h:mm a")}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -129,14 +150,18 @@ export function DigestPreview() {
                 <p className="font-semibold">⚠️ Overdue follow-ups ({data.overdue.length})</p>
                 <ul className="mt-1 space-y-0.5 text-muted-foreground">
                   {data.overdue.map((f) => (
-                    <li key={f.id}>• {f.description} — was due {format(new Date(f.due_date), "MMM d")}</li>
+                    <li key={f.id}>
+                      • {f.description} — was due {format(new Date(f.due_date), "MMM d")}
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
 
             {data.overdue.length === 0 && data.recentReplies.length === 0 && (
-              <p className="text-muted-foreground">✅ All caught up — no overdue follow-ups or new replies.</p>
+              <p className="text-muted-foreground">
+                ✅ All caught up — no overdue follow-ups or new replies.
+              </p>
             )}
 
             <p className="text-xs text-muted-foreground border-t pt-3">

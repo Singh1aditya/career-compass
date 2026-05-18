@@ -7,12 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -82,7 +77,9 @@ export function ApplicationDetailPage({ applicationId }: Props) {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
-  useEffect(() => { load(); }, [applicationId]);
+  useEffect(() => {
+    load();
+  }, [applicationId]);
 
   const load = async () => {
     setLoading(true);
@@ -109,7 +106,9 @@ export function ApplicationDetailPage({ applicationId }: Props) {
         .select("id, name, contact_type")
         .in("id", cIds);
       const map: Record<string, Contact> = {};
-      (cs ?? []).forEach((c: any) => { map[c.id] = c; });
+      (cs ?? []).forEach((c: any) => {
+        map[c.id] = c;
+      });
       setContacts(map);
     } else {
       setContacts({});
@@ -143,7 +142,10 @@ export function ApplicationDetailPage({ applicationId }: Props) {
         updated_at: new Date().toISOString(),
       })
       .eq("id", applicationId);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Application updated");
     setEditing(false);
     load();
@@ -193,7 +195,11 @@ export function ApplicationDetailPage({ applicationId }: Props) {
                 )}
                 {app.applied_date && <span>Applied {app.applied_date}</span>}
                 {app.source && <span>Source: {app.source}</span>}
-                {app.resume_version && <Badge variant="outline" className="text-xs">Resume {app.resume_version}</Badge>}
+                {app.resume_version && (
+                  <Badge variant="outline" className="text-xs">
+                    Resume {app.resume_version}
+                  </Badge>
+                )}
               </div>
             </div>
             <div className="flex gap-2 shrink-0 flex-wrap">
@@ -237,10 +243,19 @@ export function ApplicationDetailPage({ applicationId }: Props) {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="text-base">Details</CardTitle>
               {!editing ? (
-                <Button size="sm" variant="outline" onClick={() => setEditing(true)}>Edit</Button>
+                <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                  Edit
+                </Button>
               ) : (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => { setEditing(false); setForm(app); }}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setEditing(false);
+                      setForm(app);
+                    }}
+                  >
                     Cancel
                   </Button>
                   <Button size="sm" onClick={handleSave}>
@@ -267,19 +282,34 @@ export function ApplicationDetailPage({ applicationId }: Props) {
                 <div className="space-y-3">
                   <div>
                     <Label>Role *</Label>
-                    <Input value={form.role_title ?? ""} onChange={(e) => setForm({ ...form, role_title: e.target.value })} />
+                    <Input
+                      value={form.role_title ?? ""}
+                      onChange={(e) => setForm({ ...form, role_title: e.target.value })}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label>Company</Label>
-                      <Input value={form.company_name ?? ""} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
+                      <Input
+                        value={form.company_name ?? ""}
+                        onChange={(e) => setForm({ ...form, company_name: e.target.value })}
+                      />
                     </div>
                     <div>
                       <Label>Status</Label>
-                      <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      <Select
+                        value={form.status}
+                        onValueChange={(v) => setForm({ ...form, status: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
-                          {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          {STATUSES.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -287,20 +317,34 @@ export function ApplicationDetailPage({ applicationId }: Props) {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label>Applied date</Label>
-                      <Input type="date" value={form.applied_date ?? ""} onChange={(e) => setForm({ ...form, applied_date: e.target.value })} />
+                      <Input
+                        type="date"
+                        value={form.applied_date ?? ""}
+                        onChange={(e) => setForm({ ...form, applied_date: e.target.value })}
+                      />
                     </div>
                     <div>
                       <Label>Resume version</Label>
-                      <Input value={form.resume_version ?? ""} onChange={(e) => setForm({ ...form, resume_version: e.target.value })} />
+                      <Input
+                        value={form.resume_version ?? ""}
+                        onChange={(e) => setForm({ ...form, resume_version: e.target.value })}
+                      />
                     </div>
                   </div>
                   <div>
                     <Label>Source</Label>
-                    <Input value={form.source ?? ""} onChange={(e) => setForm({ ...form, source: e.target.value })} />
+                    <Input
+                      value={form.source ?? ""}
+                      onChange={(e) => setForm({ ...form, source: e.target.value })}
+                    />
                   </div>
                   <div>
                     <Label>Notes</Label>
-                    <Textarea value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={4} />
+                    <Textarea
+                      value={form.notes ?? ""}
+                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                      rows={4}
+                    />
                   </div>
                 </div>
               )}
@@ -319,12 +363,21 @@ export function ApplicationDetailPage({ applicationId }: Props) {
                 interactions.map((i) => {
                   const c = i.contact_id ? contacts[i.contact_id] : null;
                   return (
-                    <div key={i.id} className="flex items-start gap-3 border-b pb-3 last:border-b-0">
-                      <div className={`h-2 w-2 rounded-full mt-2 shrink-0 ${i.direction === "outbound" ? "bg-primary" : "bg-success"}`} />
+                    <div
+                      key={i.id}
+                      className="flex items-start gap-3 border-b pb-3 last:border-b-0"
+                    >
+                      <div
+                        className={`h-2 w-2 rounded-full mt-2 shrink-0 ${i.direction === "outbound" ? "bg-primary" : "bg-success"}`}
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="secondary" className="text-[10px] h-4 px-1">{i.type}</Badge>
-                          <Badge variant="outline" className="text-[10px] h-4 px-1">{i.direction}</Badge>
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                            {i.type}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px] h-4 px-1">
+                            {i.direction}
+                          </Badge>
                           {c && (
                             <span
                               className="text-xs font-medium hover:underline cursor-pointer"
@@ -333,7 +386,9 @@ export function ApplicationDetailPage({ applicationId }: Props) {
                               {c.name}
                             </span>
                           )}
-                          <span className="text-xs text-muted-foreground">{new Date(i.date).toLocaleDateString()}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(i.date).toLocaleDateString()}
+                          </span>
                         </div>
                         {i.summary && <p className="text-sm mt-1">{i.summary}</p>}
                       </div>
@@ -364,7 +419,9 @@ export function ApplicationDetailPage({ applicationId }: Props) {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{c.name}</p>
                       </div>
-                      <Badge variant="secondary" className="text-xs">{c.contact_type}</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {c.contact_type}
+                      </Badge>
                     </CardContent>
                   </Card>
                 ))
@@ -392,7 +449,9 @@ export function ApplicationDetailPage({ applicationId }: Props) {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{s.name}</p>
                       </div>
-                      <Badge variant="secondary" className="text-xs">{s.status}</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {s.status}
+                      </Badge>
                     </CardContent>
                   </Card>
                 ))

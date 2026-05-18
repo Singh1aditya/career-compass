@@ -1,4 +1,3 @@
-
 # Career CRM — Personal Networking & Job Search Tracker
 
 A full-featured personal CRM to manage contacts, job applications, companies, follow-ups, notes, and outreach — all from a single sidebar-driven interface with Supabase auth.
@@ -53,12 +52,14 @@ All tables have `user_id` with RLS so each user sees only their own data.
 ## Key Features
 
 ### Dashboard
+
 - Today's action queue: overdue + due-today follow-ups sorted by priority
 - Pipeline summary: count of applications by stage
 - Recent interactions timeline
 - Quick-add buttons for contacts, applications, and follow-ups
 
 ### Contacts
+
 - Table view with search, tag filter, status filter, type filter
 - Contact detail page showing: info, all linked interactions, applications, notes, follow-ups
 - Quick-add contact dialog
@@ -66,6 +67,7 @@ All tables have `user_id` with RLS so each user sees only their own data.
 - Tag management (add/remove/create tags inline)
 
 ### Applications
+
 - Table view with stage filter, company filter, date range
 - Application detail linking to company and contacts involved
 - Track resume version used
@@ -73,21 +75,25 @@ All tables have `user_id` with RLS so each user sees only their own data.
 - Stage history tracked via interactions
 
 ### Companies
+
 - Watchlist toggle, hiring signal notes
 - See all applications and contacts linked to a company
 - Industry/stage filters
 
 ### Follow-ups & Reminders
+
 - List view sorted by due date, grouped by overdue/today/upcoming
 - Mark complete, skip, or snooze (reschedule)
 - Auto-suggested follow-ups after logging an outreach interaction (user confirms)
 
 ### Interactions / Outreach History
+
 - Log interactions from contact or application detail pages
 - Full chronological history per contact
 - Direction tracking (inbound/outbound)
 
 ### Global Search
+
 - Search across contacts (name, email, company), applications (role, company), and notes (content)
 - Results grouped by type with quick navigation
 

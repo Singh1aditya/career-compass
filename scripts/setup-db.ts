@@ -3,7 +3,8 @@ import { readFileSync, readdirSync } from "fs";
 import { resolve } from "path";
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://xmkbvmyemtnfgoxtgzug.supabase.co";
-const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "sb_publicable_qjoJTUkOql2n3nxh5Aequg_vQZuqGAf";
+const supabaseKey =
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "sb_publicable_qjoJTUkOql2n3nxh5Aequg_vQZuqGAf";
 
 // Note: For real DB setup, you'll need to use the service role key, not the anon key
 // This script is for reference - actual setup should be done via Supabase dashboard
@@ -124,9 +125,9 @@ CREATE TABLE IF NOT EXISTS public.follow_ups (
 
 console.log("📋 SQL Migrations Ready\n");
 console.log("Copy the following SQL and run it in your Supabase dashboard (SQL Editor):\n");
-console.log("=" .repeat(80));
+console.log("=".repeat(80));
 console.log(migrations);
-console.log("=" .repeat(80));
+console.log("=".repeat(80));
 console.log("\nSteps:");
 console.log("1. Go to https://app.supabase.com");
 console.log("2. Select your project: xmkbvmyemtnfgoxtgzug");

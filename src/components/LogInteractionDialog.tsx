@@ -114,10 +114,14 @@ export function LogInteractionDialog({ contactId, applicationId, trigger, onLogg
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
-      <DialogTrigger asChild>
-        {trigger ?? <Button size="sm">Log Interaction</Button>}
-      </DialogTrigger>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) reset();
+      }}
+    >
+      <DialogTrigger asChild>{trigger ?? <Button size="sm">Log Interaction</Button>}</DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Log Interaction</DialogTitle>
@@ -127,18 +131,30 @@ export function LogInteractionDialog({ contactId, applicationId, trigger, onLogg
             <div>
               <Label>Type</Label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <Label>Direction</Label>
               <Select value={direction} onValueChange={setDirection}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {DIRECTIONS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  {DIRECTIONS.map((d) => (
+                    <SelectItem key={d} value={d}>
+                      {d}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -159,13 +175,19 @@ export function LogInteractionDialog({ contactId, applicationId, trigger, onLogg
           {!applicationId && (
             <div>
               <Label>Linked Application (optional)</Label>
-              <Select value={linkedAppId || "none"} onValueChange={(v) => setLinkedAppId(v === "none" ? "" : v)}>
-                <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+              <Select
+                value={linkedAppId || "none"}
+                onValueChange={(v) => setLinkedAppId(v === "none" ? "" : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
                   {apps.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
-                      {a.role_title}{a.company_name ? ` @ ${a.company_name}` : ""}
+                      {a.role_title}
+                      {a.company_name ? ` @ ${a.company_name}` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -185,18 +207,28 @@ export function LogInteractionDialog({ contactId, applicationId, trigger, onLogg
               <div className="space-y-2 pl-6">
                 <div>
                   <Label className="text-xs">Due date</Label>
-                  <Input type="date" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} />
+                  <Input
+                    type="date"
+                    value={followUpDate}
+                    onChange={(e) => setFollowUpDate(e.target.value)}
+                  />
                 </div>
                 <div>
                   <Label className="text-xs">Description</Label>
-                  <Input value={followUpDesc} onChange={(e) => setFollowUpDesc(e.target.value)} placeholder="What to do next..." />
+                  <Input
+                    value={followUpDesc}
+                    onChange={(e) => setFollowUpDesc(e.target.value)}
+                    placeholder="What to do next..."
+                  />
                 </div>
               </div>
             )}
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? "Saving..." : "Save"}
           </Button>

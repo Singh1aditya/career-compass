@@ -90,7 +90,8 @@ export function EmailScanStatus({ gmailConnected }: { gmailConnected: boolean })
             <div>
               <CardTitle>Email Auto-Ingest</CardTitle>
               <CardDescription>
-                Scan Gmail for application confirmations and rejection emails. Auto-creates and updates applications in your tracker.
+                Scan Gmail for application confirmations and rejection emails. Auto-creates and
+                updates applications in your tracker.
               </CardDescription>
             </div>
           </div>
@@ -123,9 +124,7 @@ export function EmailScanStatus({ gmailConnected }: { gmailConnected: boolean })
 
             <div className="flex items-center gap-3">
               <Button onClick={handleScan} disabled={scanning}>
-                <RefreshCw
-                  className={`h-4 w-4 mr-2 ${scanning ? "animate-spin" : ""}`}
-                />
+                <RefreshCw className={`h-4 w-4 mr-2 ${scanning ? "animate-spin" : ""}`} />
                 {scanning ? "Scanning..." : "Scan Now"}
               </Button>
               {lastScan && (
@@ -166,8 +165,8 @@ export function EmailScanStatus({ gmailConnected }: { gmailConnected: boolean })
                               r.classification === "rejection"
                                 ? "border-destructive/40 text-destructive"
                                 : r.classification === "confirmation"
-                                ? "border-primary/40 text-primary"
-                                : ""
+                                  ? "border-primary/40 text-primary"
+                                  : ""
                             }`}
                           >
                             {r.classification}

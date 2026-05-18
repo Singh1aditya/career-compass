@@ -89,19 +89,13 @@ export function ImportPage() {
   const handleProceedToPreview = async () => {
     try {
       // Convert CSV rows to contacts using mapping
-      const mappedContacts = csvRows.map((row) =>
-        mapRowToContact(row, mapping)
-      );
+      const mappedContacts = csvRows.map((row) => mapRowToContact(row, mapping));
 
       // Get existing emails from database
-      const { data: existingContacts } = await supabase
-        .from("contacts")
-        .select("email");
+      const { data: existingContacts } = await supabase.from("contacts").select("email");
 
       const existingEmails = new Set(
-        (existingContacts || [])
-          .map((c: any) => c.email?.toLowerCase())
-          .filter(Boolean)
+        (existingContacts || []).map((c: any) => c.email?.toLowerCase()).filter(Boolean),
       );
 
       // Find duplicates
@@ -192,18 +186,14 @@ export function ImportPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>CSV/Excel Import</CardTitle>
-                  <CardDescription>
-                    Drag & drop or select a file to import contacts
-                  </CardDescription>
+                  <CardDescription>Drag & drop or select a file to import contacts</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div
                 className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors cursor-pointer ${
-                  isDragActive
-                    ? "border-primary bg-primary/5"
-                    : "border-muted-foreground/25"
+                  isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/25"
                 }`}
                 onDragEnter={handleDrag}
                 onDragOver={handleDrag}
@@ -211,12 +201,8 @@ export function ImportPage() {
                 onDrop={handleDrop}
               >
                 <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-                <p className="font-medium mb-1">
-                  Drag files here or click to browse
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Supported: CSV, Excel (.xlsx)
-                </p>
+                <p className="font-medium mb-1">Drag files here or click to browse</p>
+                <p className="text-sm text-muted-foreground mb-4">Supported: CSV, Excel (.xlsx)</p>
                 <label>
                   <input
                     type="file"
@@ -234,11 +220,7 @@ export function ImportPage() {
                 </label>
               </div>
 
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => downloadTemplate()}
-              >
+              <Button variant="outline" className="w-full" onClick={() => downloadTemplate()}>
                 <Download className="h-4 w-4 mr-2" /> Download Template
               </Button>
             </CardContent>
@@ -262,18 +244,14 @@ export function ImportPage() {
                 <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Deduplication</p>
-                  <p className="text-xs text-muted-foreground">
-                    Identify duplicates by email
-                  </p>
+                  <p className="text-xs text-muted-foreground">Identify duplicates by email</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Preview & validation</p>
-                  <p className="text-xs text-muted-foreground">
-                    Review changes before importing
-                  </p>
+                  <p className="text-xs text-muted-foreground">Review changes before importing</p>
                 </div>
               </div>
             </CardContent>
@@ -286,9 +264,7 @@ export function ImportPage() {
         <Card>
           <CardHeader>
             <CardTitle>Map CSV Columns</CardTitle>
-            <CardDescription>
-              Match your CSV columns to contact fields
-            </CardDescription>
+            <CardDescription>Match your CSV columns to contact fields</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -296,9 +272,7 @@ export function ImportPage() {
                 <div key={col} className="flex items-end gap-3">
                   <div className="flex-1">
                     <Label className="text-xs">CSV Column: {col}</Label>
-                    <div className="text-sm font-medium bg-muted p-2 rounded mt-1">
-                      {col}
-                    </div>
+                    <div className="text-sm font-medium bg-muted p-2 rounded mt-1">{col}</div>
                   </div>
                   <div className="flex-1">
                     <Label className="text-xs">Map to</Label>
@@ -331,10 +305,7 @@ export function ImportPage() {
             </div>
 
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setStep("upload")}
-              >
+              <Button variant="outline" onClick={() => setStep("upload")}>
                 Back
               </Button>
               <Button className="flex-1" onClick={handleProceedToPreview}>
@@ -351,9 +322,7 @@ export function ImportPage() {
           <Card>
             <CardHeader>
               <CardTitle>Preview Contacts</CardTitle>
-              <CardDescription>
-                {contacts.length} valid contacts ready to import
-              </CardDescription>
+              <CardDescription>{contacts.length} valid contacts ready to import</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="border rounded-lg overflow-x-auto">
@@ -370,9 +339,7 @@ export function ImportPage() {
                     {contacts.slice(0, 10).map((contact, idx) => (
                       <tr key={idx} className="border-t hover:bg-muted/50">
                         <td className="px-4 py-2">{contact.name}</td>
-                        <td className="px-4 py-2 text-muted-foreground">
-                          {contact.email || "—"}
-                        </td>
+                        <td className="px-4 py-2 text-muted-foreground">{contact.email || "—"}</td>
                         <td className="px-4 py-2 text-muted-foreground">
                           {contact.company_name || "—"}
                         </td>
@@ -401,9 +368,7 @@ export function ImportPage() {
                     <CardTitle className="text-red-900">
                       {validationErrors.length} Errors Found
                     </CardTitle>
-                    <CardDescription>
-                      These rows will be skipped
-                    </CardDescription>
+                    <CardDescription>These rows will be skipped</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -421,10 +386,7 @@ export function ImportPage() {
           )}
 
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setStep("mapping")}
-            >
+            <Button variant="outline" onClick={() => setStep("mapping")}>
               Back
             </Button>
             <Button
@@ -442,29 +404,21 @@ export function ImportPage() {
       {step === "complete" && importResult && (
         <Card className="border-green-200 bg-green-50">
           <CardHeader>
-            <CardTitle className="text-green-900">
-              ✓ Import Complete
-            </CardTitle>
+            <CardTitle className="text-green-900">✓ Import Complete</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Created</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {importResult.created}
-                </p>
+                <p className="text-2xl font-bold text-green-600">{importResult.created}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Duplicates</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {importResult.duplicates}
-                </p>
+                <p className="text-2xl font-bold text-yellow-600">{importResult.duplicates}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Errors</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {importResult.errors}
-                </p>
+                <p className="text-2xl font-bold text-red-600">{importResult.errors}</p>
               </div>
             </div>
 

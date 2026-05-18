@@ -24,8 +24,8 @@ import { DEFAULT_USER_ID } from "../_shared/constants.ts";
 
 // Approximate cost per 1M tokens (MTok) in USD — used for logging only
 const COST_TABLE: Record<string, { in: number; out: number }> = {
-  "claude-haiku-4-5-20251001": { in: 0.80, out: 4.00 },
-  "claude-sonnet-4-6":         { in: 3.00, out: 15.00 },
+  "claude-haiku-4-5-20251001": { in: 0.8, out: 4.0 },
+  "claude-sonnet-4-6": { in: 3.0, out: 15.0 },
 };
 
 serve(async (req: Request) => {
@@ -43,7 +43,7 @@ serve(async (req: Request) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
   const body = await req.json();
@@ -59,10 +59,7 @@ serve(async (req: Request) => {
   const client = new Anthropic({ apiKey });
 
   // Choose model per operation
-  const model =
-    kind === "gap_analysis"
-      ? "claude-sonnet-4-6"
-      : "claude-haiku-4-5-20251001";
+  const model = kind === "gap_analysis" ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001";
 
   let systemPrompt: string;
   let userPrompt: string;
@@ -147,15 +144,18 @@ Email signature or bio: ${context.signature ?? ""}`;
   const costUsd = (tokensIn / 1_000_000) * rate.in + (tokensOut / 1_000_000) * rate.out;
 
   // Log run (fire-and-forget)
-  supabase.from("ai_runs").insert({
-    user_id: DEFAULT_USER_ID,
-    kind,
-    model,
-    output,
-    tokens_in: tokensIn,
-    tokens_out: tokensOut,
-    cost_usd: costUsd,
-  }).then(() => {});
+  supabase
+    .from("ai_runs")
+    .insert({
+      user_id: DEFAULT_USER_ID,
+      kind,
+      model,
+      output,
+      tokens_in: tokensIn,
+      tokens_out: tokensOut,
+      cost_usd: costUsd,
+    })
+    .then(() => {});
 
   return new Response(JSON.stringify({ output, model, tokensIn, tokensOut, costUsd }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },

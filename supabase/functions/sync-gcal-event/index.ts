@@ -24,7 +24,7 @@ serve(async (req: Request) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
   let body: SyncRequest;
@@ -66,10 +66,14 @@ serve(async (req: Request) => {
       });
     }
     accessToken = refreshed.access_token;
-    await supabase.from("oauth_tokens").update({
-      access_token: refreshed.access_token,
-      expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
-    }).eq("user_id", DEFAULT_USER_ID).eq("provider", "gmail");
+    await supabase
+      .from("oauth_tokens")
+      .update({
+        access_token: refreshed.access_token,
+        expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
+      })
+      .eq("user_id", DEFAULT_USER_ID)
+      .eq("provider", "gmail");
   }
 
   if (operation === "delete") {
@@ -86,7 +90,7 @@ serve(async (req: Request) => {
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${accessToken}` },
-        }
+        },
       );
     }
     return new Response(JSON.stringify({ ok: true }), {
@@ -109,7 +113,7 @@ serve(async (req: Request) => {
   }
 
   const endTime = new Date(
-    new Date(ev.scheduled_at).getTime() + ev.duration_min * 60 * 1000
+    new Date(ev.scheduled_at).getTime() + ev.duration_min * 60 * 1000,
   ).toISOString();
 
   const gcalBody: Record<string, unknown> = {
@@ -127,17 +131,14 @@ serve(async (req: Request) => {
 
   let gcalResponse: Response;
   if (operation === "create") {
-    gcalResponse = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${calId}/events`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(gcalBody),
-      }
-    );
+    gcalResponse = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calId}/events`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(gcalBody),
+    });
   } else {
     // update
     if (!ev.gcal_event_id) {
@@ -155,7 +156,7 @@ serve(async (req: Request) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(gcalBody),
-      }
+      },
     );
   }
 
@@ -181,7 +182,7 @@ serve(async (req: Request) => {
 });
 
 async function refreshAccessToken(
-  token: string
+  token: string,
 ): Promise<{ access_token: string; expires_in: number } | null> {
   const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
   const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");

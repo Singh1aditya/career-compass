@@ -38,12 +38,7 @@ export function BulkActionBar({ selectedCount, actions, onClear }: Props) {
           {action.label}
         </Button>
       ))}
-      <Button
-        size="icon"
-        variant="ghost"
-        className="h-7 w-7 rounded-full ml-1"
-        onClick={onClear}
-      >
+      <Button size="icon" variant="ghost" className="h-7 w-7 rounded-full ml-1" onClick={onClear}>
         <X className="h-3.5 w-3.5" />
       </Button>
     </div>

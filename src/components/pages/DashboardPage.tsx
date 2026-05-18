@@ -63,23 +63,18 @@ export function DashboardPage() {
   }, [user]);
 
   const loadData = async () => {
-    const [contactsRes, appsRes, companiesRes, followUpsRes, interactionsRes] =
-      await Promise.all([
-        supabase.from("contacts").select("id", { count: "exact", head: true }),
-        supabase.from("applications").select("id, status"),
-        supabase.from("companies").select("id", { count: "exact", head: true }),
-        supabase
-          .from("follow_ups")
-          .select("*")
-          .eq("status", "pending")
-          .order("due_date", { ascending: true })
-          .limit(10),
-        supabase
-          .from("interactions")
-          .select("*")
-          .order("date", { ascending: false })
-          .limit(5),
-      ]);
+    const [contactsRes, appsRes, companiesRes, followUpsRes, interactionsRes] = await Promise.all([
+      supabase.from("contacts").select("id", { count: "exact", head: true }),
+      supabase.from("applications").select("id, status"),
+      supabase.from("companies").select("id", { count: "exact", head: true }),
+      supabase
+        .from("follow_ups")
+        .select("*")
+        .eq("status", "pending")
+        .order("due_date", { ascending: true })
+        .limit(10),
+      supabase.from("interactions").select("*").order("date", { ascending: false }).limit(5),
+    ]);
 
     const appsByStatus: Record<string, number> = {};
     (appsRes.data ?? []).forEach((a) => {
@@ -109,7 +104,6 @@ export function DashboardPage() {
     { label: "Companies", value: stats.totalCompanies, icon: Building2, to: "/companies" },
     { label: "Pending Follow-ups", value: stats.pendingFollowUps, icon: Clock, to: "/follow-ups" },
   ];
-
 
   if (loading) {
     return (
@@ -172,7 +166,9 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {Object.keys(stats.applicationsByStatus).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No applications yet. Start tracking your job search!</p>
+              <p className="text-sm text-muted-foreground">
+                No applications yet. Start tracking your job search!
+              </p>
             ) : (
               <div className="space-y-2">
                 {Object.entries(stats.applicationsByStatus).map(([status, count]) => (
@@ -204,7 +200,9 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             {followUps.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No pending follow-ups. You're all caught up!</p>
+              <p className="text-sm text-muted-foreground">
+                No pending follow-ups. You're all caught up!
+              </p>
             ) : (
               <div className="space-y-3">
                 {followUps.slice(0, 5).map((fu) => {
@@ -221,7 +219,9 @@ export function DashboardPage() {
                           )}
                           <p className="text-sm truncate">{fu.description}</p>
                         </div>
-                        <p className={`text-xs mt-0.5 ml-5.5 ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                        <p
+                          className={`text-xs mt-0.5 ml-5.5 ${overdue ? "text-destructive" : "text-muted-foreground"}`}
+                        >
                           {overdue ? "Overdue — " : ""}
                           {format(dueDate, "MMM d")}
                         </p>
@@ -255,12 +255,18 @@ export function DashboardPage() {
             <div className="space-y-3">
               {interactions.map((i) => (
                 <div key={i.id} className="flex items-center gap-3">
-                  <div className={`h-2 w-2 rounded-full shrink-0 ${i.direction === "outbound" ? "bg-primary" : "bg-success"}`} />
+                  <div
+                    className={`h-2 w-2 rounded-full shrink-0 ${i.direction === "outbound" ? "bg-primary" : "bg-success"}`}
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm truncate">{i.summary || `${i.type} (${i.direction})`}</p>
-                    <p className="text-xs text-muted-foreground">{format(parseISO(i.date), "MMM d")}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(parseISO(i.date), "MMM d")}
+                    </p>
                   </div>
-                  <Badge variant="secondary" className="text-xs shrink-0">{i.type}</Badge>
+                  <Badge variant="secondary" className="text-xs shrink-0">
+                    {i.type}
+                  </Badge>
                 </div>
               ))}
             </div>

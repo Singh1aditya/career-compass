@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface SendEmailPayload {
@@ -25,7 +24,7 @@ serve(async (req: Request) => {
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     import { DEFAULT_USER_ID } from "../_shared/constants.ts";
@@ -47,7 +46,7 @@ serve(async (req: Request) => {
         {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -57,7 +56,7 @@ serve(async (req: Request) => {
       const refreshed = await refreshGmailToken(
         supabase,
         DEFAULT_USER_ID,
-        oauthToken.refresh_token
+        oauthToken.refresh_token,
       );
 
       if (!refreshed) {
@@ -69,7 +68,7 @@ serve(async (req: Request) => {
           {
             status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
       }
     }
@@ -91,7 +90,7 @@ serve(async (req: Request) => {
       payload.to,
       payload.subject,
       payload.body,
-      freshToken.access_token
+      freshToken.access_token,
     );
 
     if (!result.success) {
@@ -120,17 +119,14 @@ serve(async (req: Request) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error: any) {
     console.error("[Function Error]", error);
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ success: false, error: error.message }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
 
@@ -138,7 +134,7 @@ async function sendViaGmailAPI(
   to: string,
   subject: string,
   body: string,
-  accessToken: string
+  accessToken: string,
 ): Promise<{
   success: boolean;
   messageId?: string;
@@ -151,19 +147,16 @@ async function sendViaGmailAPI(
     const encodedEmail = btoa(email).replace(/\+/g, "-").replace(/\//g, "_");
 
     // Send via Gmail API
-    const response = await fetch(
-      "https://www.googleapis.com/gmail/v1/users/me/messages/send",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          raw: encodedEmail,
-        }),
-      }
-    );
+    const response = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        raw: encodedEmail,
+      }),
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -191,7 +184,7 @@ async function sendViaGmailAPI(
 async function refreshGmailToken(
   supabase: any,
   userId: string,
-  refreshToken: string
+  refreshToken: string,
 ): Promise<boolean> {
   try {
     const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
@@ -223,9 +216,7 @@ async function refreshGmailToken(
       .from("oauth_tokens")
       .update({
         access_token: tokens.access_token,
-        expires_at: new Date(
-          Date.now() + tokens.expires_in * 1000
-        ).toISOString(),
+        expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
       })
       .eq("user_id", userId)
       .eq("provider", "gmail");

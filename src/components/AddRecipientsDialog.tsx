@@ -81,7 +81,10 @@ export function AddRecipientsDialog({
       }
       // Search filter
       if (q) {
-        const hay = [c.name, c.email, c.company_name, c.role].filter(Boolean).join(" ").toLowerCase();
+        const hay = [c.name, c.email, c.company_name, c.role]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -213,10 +216,7 @@ export function AddRecipientsDialog({
                 return (
                   <div key={g.key} className="border-b last:border-b-0">
                     <div className="px-3 py-1.5 bg-muted/50 flex items-center gap-2 sticky top-0">
-                      <Checkbox
-                        checked={allSelected}
-                        onCheckedChange={() => toggleGroup(g.key)}
-                      />
+                      <Checkbox checked={allSelected} onCheckedChange={() => toggleGroup(g.key)} />
                       <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                         {g.label}
                       </span>

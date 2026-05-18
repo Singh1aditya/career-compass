@@ -5,6 +5,7 @@
 This guide walks you through connecting Gmail to Career CRM to automatically send and monitor emails from outreach sequences.
 
 **What you'll be able to do:**
+
 - ✅ Send personalized emails from sequences to contacts
 - ✅ Monitor replies and auto-detect responses
 - ✅ Create interaction records when replies arrive
@@ -118,12 +119,13 @@ If not using Supabase CLI, manually deploy via [Supabase Dashboard](https://app.
 ## Step 5: Test Sending an Email
 
 1. Create a sequence with an email step:
+
    ```
    Subject: Hi {{first_name}}, interested in {{role}} at {{company}}?
    Body: Dear {{first_name}},
-   
+
    I found your profile and think you'd be great for {{role}}.
-   
+
    Would love to chat!
    ```
 
@@ -201,16 +203,18 @@ supabase functions upsert-cron cron.json
 ### "Gmail not connected" error when sending
 
 **Check**:
+
 1. Did you click "Connect Gmail" in Settings?
 2. Are tokens stored? Check database:
    ```sql
-   SELECT * FROM oauth_tokens 
+   SELECT * FROM oauth_tokens
    WHERE provider = 'gmail' AND user_id = '00000000-0000-0000-0000-000000000000';
    ```
 
 ### OAuth callback fails
 
 **Check**:
+
 1. Is the redirect URI in your Google OAuth app exactly: `http://localhost:8080/auth/gmail/callback`?
 2. Are environment variables set correctly?
 3. Check browser console for error messages
@@ -218,6 +222,7 @@ supabase functions upsert-cron cron.json
 ### Emails not sending from sequences
 
 **Check**:
+
 1. Is sequence status "active"?
 2. Do recipients exist? Do they have "waiting" state?
 3. Check current time >= recipient `next_send_at`
@@ -227,6 +232,7 @@ supabase functions upsert-cron cron.json
 ### Replies not detected
 
 **Check**:
+
 1. Is `monitor-gmail-replies` function running?
 2. Are emails sent with thread IDs? (should be stored in `sequence_sends.gmail_thread_id`)
 3. Did the contact actually reply to the email thread?

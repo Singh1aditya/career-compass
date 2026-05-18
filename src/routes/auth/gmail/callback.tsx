@@ -28,9 +28,10 @@ function GmailCallbackComponent() {
   const handleCallback = async () => {
     try {
       if (search.error) {
-        const msg = search.error === "access_denied"
-          ? "You denied Gmail access. Connect Gmail again to enable email sending."
-          : `Gmail authorization failed: ${search.error}`;
+        const msg =
+          search.error === "access_denied"
+            ? "You denied Gmail access. Connect Gmail again to enable email sending."
+            : `Gmail authorization failed: ${search.error}`;
         throw new Error(msg);
       }
 
@@ -46,8 +47,8 @@ function GmailCallbackComponent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({ code: search.code, redirect_uri: redirectUri }),
       });
@@ -58,7 +59,9 @@ function GmailCallbackComponent() {
         throw new Error(data.error || "Failed to exchange authorization code");
       }
 
-      toast.success(data.email ? `Gmail connected: ${data.email}` : "Gmail connected successfully!");
+      toast.success(
+        data.email ? `Gmail connected: ${data.email}` : "Gmail connected successfully!",
+      );
       navigate({ to: "/settings" });
     } catch (error: any) {
       console.error("Gmail callback error:", error);
@@ -74,9 +77,7 @@ function GmailCallbackComponent() {
       <div className="text-center">
         <h2 className="text-lg font-semibold mb-2">Connecting Gmail...</h2>
         <p className="text-muted-foreground">
-          {processing
-            ? "Please wait while we complete the setup."
-            : "Redirecting..."}
+          {processing ? "Please wait while we complete the setup." : "Redirecting..."}
         </p>
       </div>
     </div>

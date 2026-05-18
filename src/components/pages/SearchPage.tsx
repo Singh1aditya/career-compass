@@ -14,7 +14,11 @@ export function SearchPage() {
 
   const handleSearch = async (q: string) => {
     setQuery(q);
-    if (q.length < 2) { setResults(emptyResults); setSearched(false); return; }
+    if (q.length < 2) {
+      setResults(emptyResults);
+      setSearched(false);
+      return;
+    }
     setLoading(true);
     setSearched(true);
     const r = await searchAll(q, 10);
@@ -42,20 +46,33 @@ export function SearchPage() {
       {loading && <p className="text-sm text-muted-foreground">Searching...</p>}
 
       {searched && !loading && totalResults === 0 && (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">
-          <SearchIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
-          <p>No results found for "{query}"</p>
-        </CardContent></Card>
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            <SearchIcon className="h-10 w-10 mx-auto mb-2 opacity-50" />
+            <p>No results found for "{query}"</p>
+          </CardContent>
+        </Card>
       )}
 
       {results.contacts.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><Users className="h-4 w-4" /> Contacts ({results.contacts.length})</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Users className="h-4 w-4" /> Contacts ({results.contacts.length})
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">
             {results.contacts.map((c) => (
-              <Link key={c.id} to="/contacts/$contactId" params={{ contactId: c.id }} className="block p-2 rounded hover:bg-accent">
+              <Link
+                key={c.id}
+                to="/contacts/$contactId"
+                params={{ contactId: c.id }}
+                className="block p-2 rounded hover:bg-accent"
+              >
                 <p className="text-sm font-medium">{c.name}</p>
-                <p className="text-xs text-muted-foreground">{[c.company_name, c.email, c.contact_type].filter(Boolean).join(" • ")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {[c.company_name, c.email, c.contact_type].filter(Boolean).join(" • ")}
+                </p>
               </Link>
             ))}
           </CardContent>
@@ -64,15 +81,28 @@ export function SearchPage() {
 
       {results.applications.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><Briefcase className="h-4 w-4" /> Applications ({results.applications.length})</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Briefcase className="h-4 w-4" /> Applications ({results.applications.length})
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">
             {results.applications.map((a) => (
-              <Link key={a.id} to="/applications/$applicationId" params={{ applicationId: a.id }} className="block p-2 rounded hover:bg-accent">
+              <Link
+                key={a.id}
+                to="/applications/$applicationId"
+                params={{ applicationId: a.id }}
+                className="block p-2 rounded hover:bg-accent"
+              >
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium">{a.role_title}</p>
-                  <Badge variant="secondary" className="text-xs">{a.status}</Badge>
+                  <Badge variant="secondary" className="text-xs">
+                    {a.status}
+                  </Badge>
                 </div>
-                {a.company_name && <p className="text-xs text-muted-foreground">{a.company_name}</p>}
+                {a.company_name && (
+                  <p className="text-xs text-muted-foreground">{a.company_name}</p>
+                )}
               </Link>
             ))}
           </CardContent>
@@ -81,10 +111,19 @@ export function SearchPage() {
 
       {results.companies.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><Building2 className="h-4 w-4" /> Companies ({results.companies.length})</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Building2 className="h-4 w-4" /> Companies ({results.companies.length})
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">
             {results.companies.map((c) => (
-              <Link key={c.id} to="/companies/$companyId" params={{ companyId: c.id }} className="block p-2 rounded hover:bg-accent">
+              <Link
+                key={c.id}
+                to="/companies/$companyId"
+                params={{ companyId: c.id }}
+                className="block p-2 rounded hover:bg-accent"
+              >
                 <p className="text-sm font-medium">{c.name}</p>
                 {c.industry && <p className="text-xs text-muted-foreground">{c.industry}</p>}
               </Link>
@@ -95,7 +134,11 @@ export function SearchPage() {
 
       {results.notes.length > 0 && (
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold flex items-center gap-2"><FileText className="h-4 w-4" /> Notes ({results.notes.length})</CardTitle></CardHeader>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <FileText className="h-4 w-4" /> Notes ({results.notes.length})
+            </CardTitle>
+          </CardHeader>
           <CardContent className="space-y-2">
             {results.notes.map((n) => (
               <div key={n.id} className="p-2 rounded hover:bg-accent">

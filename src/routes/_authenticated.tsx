@@ -25,7 +25,8 @@ const pageTitles: Record<string, string> = {
 
 function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const title = Object.entries(pageTitles).find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? "Career CRM";
+  const title =
+    Object.entries(pageTitles).find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? "Career CRM";
 
   return (
     <SidebarProvider>

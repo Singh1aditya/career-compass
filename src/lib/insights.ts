@@ -25,7 +25,7 @@ export async function fetchFunnelData(): Promise<{ status: string; count: number
 
 // Returns { sent, replied, rate } for last N days
 export async function fetchResponseRate(
-  days: number
+  days: number,
 ): Promise<{ sent: number; replied: number; rate: number }> {
   const since = subDays(new Date(), days).toISOString();
 
@@ -87,9 +87,7 @@ export async function fetchTimeInStage(): Promise<{ status: string; medianDays: 
     if (arr.length === 0) return 0;
     const sorted = [...arr].sort((a, b) => a - b);
     const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 !== 0
-      ? sorted[mid]
-      : (sorted[mid - 1] + sorted[mid]) / 2;
+    return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
   }
 
   return Object.entries(durations).map(([status, days]) => ({

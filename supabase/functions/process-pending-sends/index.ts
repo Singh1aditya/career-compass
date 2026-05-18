@@ -3,8 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface SequenceStep {
@@ -32,7 +31,7 @@ serve(async (req: Request) => {
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     import { DEFAULT_USER_ID } from "../_shared/constants.ts";
@@ -52,10 +51,7 @@ serve(async (req: Request) => {
     };
 
     // Get all active sequences
-    const { data: sequences } = await supabase
-      .from("sequences")
-      .select("*")
-      .eq("status", "active");
+    const { data: sequences } = await supabase.from("sequences").select("*").eq("status", "active");
 
     if (!sequences || sequences.length === 0) {
       return new Response(
@@ -67,7 +63,7 @@ serve(async (req: Request) => {
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -90,7 +86,9 @@ serve(async (req: Request) => {
 
       for (const recipient of recipients) {
         if (totalSent >= perTickCap) {
-          await log(supabase, "info", "process-pending-sends", "per-tick cap reached", { perTickCap });
+          await log(supabase, "info", "process-pending-sends", "per-tick cap reached", {
+            perTickCap,
+          });
           break outer;
         }
         totalProcessed++;
@@ -122,10 +120,22 @@ serve(async (req: Request) => {
           const body = renderTemplate(step.template_body, contact, sender);
 
           // Send email via Edge Function — 1 retry on failure
-          let sendResult = await sendEmailViaGmail(contact.email, subject, body, recipient.id, step.step_number);
+          let sendResult = await sendEmailViaGmail(
+            contact.email,
+            subject,
+            body,
+            recipient.id,
+            step.step_number,
+          );
           if (!sendResult.success) {
             await new Promise((r) => setTimeout(r, 1500));
-            sendResult = await sendEmailViaGmail(contact.email, subject, body, recipient.id, step.step_number);
+            sendResult = await sendEmailViaGmail(
+              contact.email,
+              subject,
+              body,
+              recipient.id,
+              step.step_number,
+            );
           }
 
           if (sendResult.success) {
@@ -155,9 +165,7 @@ serve(async (req: Request) => {
               })
               .eq("id", recipient.id);
 
-            console.log(
-              `[Cron] Sent email to ${contact.email} (state: ${nextState})`
-            );
+            console.log(`[Cron] Sent email to ${contact.email} (state: ${nextState})`);
           } else {
             await log(supabase, "error", "process-pending-sends", "send failed", {
               recipientId: recipient.id,
@@ -181,7 +189,10 @@ serve(async (req: Request) => {
       }
     }
 
-    await log(supabase, "info", "process-pending-sends", "tick done", { totalProcessed, totalSent });
+    await log(supabase, "info", "process-pending-sends", "tick done", {
+      totalProcessed,
+      totalSent,
+    });
 
     return new Response(
       JSON.stringify({
@@ -192,7 +203,7 @@ serve(async (req: Request) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error: any) {
     console.error("[Cron Error]", error);
@@ -206,7 +217,7 @@ serve(async (req: Request) => {
       {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 });
@@ -214,7 +225,7 @@ serve(async (req: Request) => {
 function renderTemplate(
   text: string,
   contact: { name: string; company_name?: string; role?: string; email?: string },
-  sender: { display_name?: string; signature?: string } = {}
+  sender: { display_name?: string; signature?: string } = {},
 ): string {
   const firstName = (contact.name ?? "").split(" ")[0] || "[First Name]";
   return text
@@ -256,7 +267,7 @@ function getNextState(stepType: string): string {
 async function getNextStep(
   supabase: any,
   sequenceId: string,
-  currentState: string
+  currentState: string,
 ): Promise<SequenceStep | null> {
   const stateToStepMap: Record<string, string> = {
     waiting: "initial",
@@ -284,26 +295,29 @@ async function sendEmailViaGmail(
   subject: string,
   body: string,
   recipientId: string,
-  stepNumber: number
+  stepNumber: number,
 ): Promise<{ success: boolean; error?: string; status?: number }> {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const response = await fetch(
-      `${supabaseUrl}/functions/v1/send-email-via-gmail`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-        },
-        body: JSON.stringify({ to, subject, body, recipientId, stepNumber }),
-      }
-    );
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-email-via-gmail`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+      },
+      body: JSON.stringify({ to, subject, body, recipientId, stepNumber }),
+    });
 
     if (!response.ok) {
       let err: any = {};
-      try { err = await response.json(); } catch (_e) {}
-      return { success: false, error: err.error ?? `HTTP ${response.status}`, status: response.status };
+      try {
+        err = await response.json();
+      } catch (_e) {}
+      return {
+        success: false,
+        error: err.error ?? `HTTP ${response.status}`,
+        status: response.status,
+      };
     }
     return { success: true };
   } catch (error: any) {

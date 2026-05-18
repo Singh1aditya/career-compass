@@ -24,7 +24,7 @@ serve(async (req: Request) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
   // Check digest is enabled
@@ -134,10 +134,14 @@ serve(async (req: Request) => {
       const refreshed = await refreshToken(oauthToken.refresh_token);
       if (refreshed) {
         accessToken = refreshed.access_token;
-        await supabase.from("oauth_tokens").update({
-          access_token: refreshed.access_token,
-          expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
-        }).eq("user_id", DEFAULT_USER_ID).eq("provider", "gmail");
+        await supabase
+          .from("oauth_tokens")
+          .update({
+            access_token: refreshed.access_token,
+            expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
+          })
+          .eq("user_id", DEFAULT_USER_ID)
+          .eq("provider", "gmail");
       }
     }
 
@@ -225,7 +229,9 @@ function buildRawEmail(to: string, subject: string, htmlBody: string): string {
     .replace(/=+$/, "");
 }
 
-async function refreshToken(refreshToken: string): Promise<{ access_token: string; expires_in: number } | null> {
+async function refreshToken(
+  refreshToken: string,
+): Promise<{ access_token: string; expires_in: number } | null> {
   const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
   const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
   if (!clientId || !clientSecret) return null;

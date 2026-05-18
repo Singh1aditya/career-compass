@@ -6,7 +6,10 @@ export const Route = createFileRoute("/_authenticated/companies/")({
   head: () => ({
     meta: [
       { title: "Companies — Career CRM" },
-      { name: "description", content: "Track companies you're interested in and their hiring signals." },
+      {
+        name: "description",
+        content: "Track companies you're interested in and their hiring signals.",
+      },
     ],
   }),
 });

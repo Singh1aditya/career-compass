@@ -1,10 +1,26 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SearchResults {
-  contacts: Array<{ id: string; name: string; email: string | null; company_name: string | null; contact_type: string }>;
-  applications: Array<{ id: string; role_title: string; company_name: string | null; status: string }>;
+  contacts: Array<{
+    id: string;
+    name: string;
+    email: string | null;
+    company_name: string | null;
+    contact_type: string;
+  }>;
+  applications: Array<{
+    id: string;
+    role_title: string;
+    company_name: string | null;
+    status: string;
+  }>;
   companies: Array<{ id: string; name: string; industry: string | null }>;
-  notes: Array<{ id: string; content: string; contact_id: string | null; application_id: string | null }>;
+  notes: Array<{
+    id: string;
+    content: string;
+    contact_id: string | null;
+    application_id: string | null;
+  }>;
 }
 
 export const emptyResults: SearchResults = {
@@ -23,7 +39,9 @@ export async function searchAll(query: string, limit = 10): Promise<SearchResult
     supabase
       .from("contacts")
       .select("id, name, email, company_name, contact_type")
-      .or(`name.ilike.${pattern},email.ilike.${pattern},phone.ilike.${pattern},company_name.ilike.${pattern},role.ilike.${pattern},notes.ilike.${pattern}`)
+      .or(
+        `name.ilike.${pattern},email.ilike.${pattern},phone.ilike.${pattern},company_name.ilike.${pattern},role.ilike.${pattern},notes.ilike.${pattern}`,
+      )
       .limit(limit),
     supabase
       .from("applications")

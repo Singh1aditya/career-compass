@@ -61,8 +61,6 @@ interface Recipient {
   };
 }
 
-import { DEFAULT_USER_ID } from "@/lib/constants";
-
 export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
   const navigate = useNavigate();
   const [sequence, setSequence] = useState<Sequence | null>(null);
@@ -100,7 +98,7 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
           .select("company_name")
           .eq("id", seqData.application_id)
           .maybeSingle();
-        setTargetCompany((appData as any)?.company_name ?? null);
+        setTargetCompany((appData as { company_name: string | null } | null)?.company_name ?? null);
       } else {
         setTargetCompany(null);
       }
@@ -186,8 +184,10 @@ export function SequenceDetailPage({ sequenceId }: { sequenceId: string }) {
       const result = await processPendingSends();
       toast.success(`Processed ${result.sent} email(s)`);
       loadSequence();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to send emails");
+    } catch (error) {
+      toast.error(
+        (error instanceof Error ? error.message : String(error)) || "Failed to send emails",
+      );
     } finally {
       setSendingEmails(false);
     }

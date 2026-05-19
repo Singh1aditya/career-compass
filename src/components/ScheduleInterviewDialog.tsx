@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -65,6 +65,7 @@ export function ScheduleInterviewDialog({
     ? `Interview — ${roleTitle}${companyName ? ` @ ${companyName}` : ""}`
     : "Interview";
 
+  const { user } = useAuth();
   const [form, setForm] = useState<FormState>({
     title: defaultTitle,
     kind: "interview",
@@ -87,7 +88,7 @@ export function ScheduleInterviewDialog({
     setSaving(true);
 
     const payload = {
-      user_id: DEFAULT_USER_ID,
+      user_id: user!.id,
       application_id: applicationId,
       title: form.title.trim() || defaultTitle,
       kind: form.kind,

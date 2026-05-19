@@ -43,7 +43,7 @@ import {
 import { toast } from "sonner";
 import { renderTemplate, loadSender, type TemplateSender } from "@/lib/templates";
 import { roleMatches, matchedTokens } from "@/lib/sequence-keywords";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Contact {
   id: string;
@@ -149,18 +149,19 @@ export function StartOutreachWizard({
   const [sender, setSender] = useState<TemplateSender>({});
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
 
   // Reset and seed when opened
   useEffect(() => {
-    if (!open) return;
+    if (!open || !user) return;
     setStep(1);
     setName(`Outreach for ${roleTitle}${companyName ? ` at ${companyName}` : ""}`);
     setShowAll(false);
     setEmailSteps(defaultEmailSteps());
     setPreviewContactId(null);
     loadContacts();
-    loadSender(true).then((s) => setSender(s));
-  }, [open, roleTitle, companyName]);
+    loadSender(user.id, true).then((s) => setSender(s));
+  }, [open, roleTitle, companyName, user]);
 
   const loadContacts = async () => {
     setLoadingContacts(true);
@@ -283,7 +284,7 @@ export function StartOutreachWizard({
     const { data: seq, error: seqErr } = await supabase
       .from("sequences")
       .insert({
-        user_id: DEFAULT_USER_ID,
+        user_id: user!.id,
         name: name.trim(),
         application_id: applicationId,
         status: "draft",
@@ -323,7 +324,7 @@ export function StartOutreachWizard({
         eligible.map((c) => ({
           sequence_id: seq.id,
           contact_id: c.id,
-          user_id: DEFAULT_USER_ID,
+          user_id: user!.id,
           state: "waiting",
         })),
       );

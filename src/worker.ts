@@ -2,6 +2,13 @@
 // security headers on every response.
 import { createStartHandler, defaultStreamHandler } from "@tanstack/react-start/server";
 
+// Minimal Cloudflare Workers ambient — full types live in @cloudflare/workers-types,
+// not currently a project dependency. Local-only build does not exercise this file.
+type ExecutionContext = {
+  waitUntil(promise: Promise<unknown>): void;
+  passThroughOnException(): void;
+};
+
 const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
@@ -22,11 +29,9 @@ const fetchHandler = createStartHandler(defaultStreamHandler);
 
 export default {
   async fetch(request: Request, env: unknown, ctx: ExecutionContext): Promise<Response> {
-    const response = await (fetchHandler as (r: Request, e: unknown, c: ExecutionContext) => Promise<Response>)(
-      request,
-      env,
-      ctx,
-    );
+    const response = await (
+      fetchHandler as (r: Request, e: unknown, c: ExecutionContext) => Promise<Response>
+    )(request, env, ctx);
     const secure = new Headers(response.headers);
     for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
       secure.set(key, value);

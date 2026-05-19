@@ -13,7 +13,8 @@ interface GmailCallbackSearch {
 
 export const Route = createFileRoute("/auth/gmail/callback")({
   component: GmailCallbackComponent,
-  validateSearch: (search: Record<string, any>): GmailCallbackSearch => search,
+  validateSearch: (search: Record<string, unknown>): GmailCallbackSearch =>
+    search as GmailCallbackSearch,
 });
 
 function GmailCallbackComponent() {
@@ -63,9 +64,11 @@ function GmailCallbackComponent() {
         data.email ? `Gmail connected: ${data.email}` : "Gmail connected successfully!",
       );
       navigate({ to: "/settings" });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Gmail callback error:", error);
-      toast.error(error.message || "Failed to connect Gmail");
+      toast.error(
+        (error instanceof Error ? error.message : String(error)) || "Failed to connect Gmail",
+      );
       navigate({ to: "/settings" });
     } finally {
       setProcessing(false);

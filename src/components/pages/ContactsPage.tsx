@@ -16,6 +16,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -46,7 +56,6 @@ import {
   ListPlus,
 } from "lucide-react";
 import { BulkActionBar } from "@/components/BulkActionBar";
-import { DEFAULT_USER_ID } from "@/lib/constants";
 
 interface Contact {
   id: string;
@@ -94,6 +103,7 @@ export function ContactsPage() {
   const [bulkEnrollOpen, setBulkEnrollOpen] = useState(false);
   const [sequences, setSequences] = useState<{ id: string; name: string }[]>([]);
   const [bulkSequenceId, setBulkSequenceId] = useState("");
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const loadContacts = useCallback(async () => {
     const { data } = await supabase
@@ -174,9 +184,7 @@ export function ContactsPage() {
       }
       toast.success("Contact updated");
     } else {
-      const { error } = await supabase
-        .from("contacts")
-        .insert({ ...form, user_id: DEFAULT_USER_ID });
+      const { error } = await supabase.from("contacts").insert({ ...form, user_id: user!.id });
       if (error) {
         toast.error(error.message);
         return;
@@ -231,20 +239,21 @@ export function ContactsPage() {
     loadContacts();
   };
 
-  const bulkDelete = async () => {
+  const bulkDelete = () => {
+    if (checkedIds.size === 0) return;
+    setBulkDeleteOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
     const ids = Array.from(checkedIds);
-    if (
-      !window.confirm(
-        `Delete ${ids.length} contact${ids.length !== 1 ? "s" : ""}? This cannot be undone.`,
-      )
-    )
-      return;
     const { error } = await supabase.from("contacts").delete().in("id", ids);
     if (error) {
       toast.error(error.message);
       return;
     }
     toast.success(`Deleted ${ids.length} contact${ids.length !== 1 ? "s" : ""}`);
+    setBulkDeleteOpen(false);
+    setCheckedIds(new Set());
     loadContacts();
   };
 
@@ -252,7 +261,7 @@ export function ContactsPage() {
     const { data } = await supabase
       .from("sequences")
       .select("id, name")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", user!.id)
       .order("created_at", { ascending: false });
     setSequences((data as { id: string; name: string }[]) ?? []);
   };
@@ -265,7 +274,7 @@ export function ContactsPage() {
     // Upsert the tag row (name is unique per user)
     const { data: tagRow, error: tagErr } = await supabase
       .from("tags")
-      .upsert({ name: tagName, user_id: DEFAULT_USER_ID }, { onConflict: "name,user_id" })
+      .upsert({ name: tagName, user_id: user!.id }, { onConflict: "name,user_id" })
       .select("id")
       .single();
     if (tagErr) {
@@ -293,7 +302,7 @@ export function ContactsPage() {
     const rows = ids.map((contact_id) => ({
       sequence_id: bulkSequenceId,
       contact_id,
-      user_id: DEFAULT_USER_ID,
+      user_id: user!.id,
       state: "waiting",
     }));
     const { error } = await supabase
@@ -466,7 +475,25 @@ export function ContactsPage() {
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
             <User className="h-10 w-10 mx-auto mb-2 opacity-50" />
-            <p>No contacts found. Add your first contact to get started!</p>
+            {searchQuery || typeFilter !== "all" || statusFilter !== "active" ? (
+              <>
+                <p>No contacts match your filters.</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-3"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setTypeFilter("all");
+                    setStatusFilter("active");
+                  }}
+                >
+                  Clear filters
+                </Button>
+              </>
+            ) : (
+              <p>No contacts yet. Add your first contact to get started!</p>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -679,6 +706,29 @@ export function ContactsPage() {
           },
         ]}
       />
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {checkedIds.size} contact{checkedIds.size !== 1 ? "s" : ""}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the selected contacts along with their associated notes,
+              follow-ups, and interactions. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

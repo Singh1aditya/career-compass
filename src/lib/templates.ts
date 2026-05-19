@@ -13,7 +13,6 @@
 //   {{my_role}}       — sender's role (from settings)
 
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_USER_ID } from "@/lib/constants";
 
 export interface TemplateContact {
   name: string;
@@ -46,18 +45,21 @@ export function renderTemplate(
 }
 
 let cachedSender: TemplateSender | null = null;
+let cachedSenderUserId: string | null = null;
 
-export async function loadSender(force = false): Promise<TemplateSender> {
-  if (cachedSender && !force) return cachedSender;
+export async function loadSender(userId: string, force = false): Promise<TemplateSender> {
+  if (cachedSender && !force && cachedSenderUserId === userId) return cachedSender;
   const { data } = await supabase
     .from("user_settings")
     .select("display_name, signature")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .maybeSingle();
   cachedSender = (data as TemplateSender) ?? {};
+  cachedSenderUserId = userId;
   return cachedSender;
 }
 
 export function clearSenderCache() {
   cachedSender = null;
+  cachedSenderUserId = null;
 }

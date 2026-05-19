@@ -42,10 +42,11 @@ interface Application {
   company_name: string;
 }
 
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 export function SequencesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [sequences, setSequences] = useState<Sequence[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +96,7 @@ export function SequencesPage() {
     const { error } = await supabase.from("sequences").insert({
       name: form.name,
       application_id: form.application_id,
-      user_id: DEFAULT_USER_ID,
+      user_id: user!.id,
       status: "draft",
     });
 

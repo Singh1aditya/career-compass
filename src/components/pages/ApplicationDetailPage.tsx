@@ -23,7 +23,6 @@ import { FollowUpsList } from "@/components/FollowUpsList";
 import { StartOutreachWizard } from "@/components/StartOutreachWizard";
 import { AttachmentsList } from "@/components/AttachmentsList";
 import { ScheduleInterviewDialog } from "@/components/ScheduleInterviewDialog";
-import { DEFAULT_USER_ID } from "@/lib/constants";
 import { APPLICATION_STATUSES as STATUSES, statusColors } from "@/lib/status";
 import { AIComposeButton } from "@/components/AIComposeButton";
 
@@ -99,14 +98,20 @@ export function ApplicationDetailPage({ applicationId }: Props) {
     setInteractions((ints as Interaction[]) ?? []);
 
     // Pull involved contacts
-    const cIds = Array.from(new Set((ints ?? []).map((i: any) => i.contact_id).filter(Boolean)));
+    const cIds = Array.from(
+      new Set(
+        (ints ?? [])
+          .map((i: { contact_id: string | null }) => i.contact_id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
     if (cIds.length > 0) {
       const { data: cs } = await supabase
         .from("contacts")
         .select("id, name, contact_type")
         .in("id", cIds);
       const map: Record<string, Contact> = {};
-      (cs ?? []).forEach((c: any) => {
+      (cs ?? []).forEach((c: Contact) => {
         map[c.id] = c;
       });
       setContacts(map);
@@ -222,7 +227,8 @@ export function ApplicationDetailPage({ applicationId }: Props) {
       </Card>
 
       <Tabs defaultValue="overview">
-        <TabsList>
+        <div className="overflow-x-auto -mx-1 px-1">
+        <TabsList className="w-max">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="interactions">
             Interactions {interactions.length > 0 && `(${interactions.length})`}
@@ -237,6 +243,7 @@ export function ApplicationDetailPage({ applicationId }: Props) {
           <TabsTrigger value="followups">Follow-ups</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
         </TabsList>
+        </div>
 
         <TabsContent value="overview">
           <Card>

@@ -2,8 +2,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { renderTemplate as renderTemplateCore, loadSender } from "@/lib/templates";
 
-import { DEFAULT_USER_ID } from "@/lib/constants";
-
 // Synchronous wrapper for the existing API. For accurate signature rendering
 // at send time, the edge function reads sender settings from the DB directly.
 export function renderTemplate(
@@ -20,6 +18,7 @@ export function renderTemplate(
 
 // Use this from UI when you want signature variables filled in for preview.
 export async function renderTemplateWithSender(
+  userId: string,
   text: string,
   contact: {
     name: string;
@@ -28,7 +27,7 @@ export async function renderTemplateWithSender(
     email?: string | null;
   },
 ): Promise<string> {
-  const sender = await loadSender();
+  const sender = await loadSender(userId);
   return renderTemplateCore(text, contact, sender);
 }
 
@@ -109,8 +108,8 @@ export async function processPendingSends() {
         if (!contact || !contact.email) continue;
 
         // Render template
-        const subject = renderTemplate(step.template_subject ?? "", contact as any);
-        const body = renderTemplate(step.template_body, contact as any);
+        const subject = renderTemplate(step.template_subject ?? "", contact);
+        const body = renderTemplate(step.template_body, contact);
 
         // Send email (will be delegated to Edge Function when Gmail is connected)
         const sendResult = await sendEmail({
@@ -165,7 +164,7 @@ export async function processPendingSends() {
 
     console.log(`[Sequences] Processed ${totalSent} sends`);
     return { success: true, sent: totalSent };
-  } catch (error: any) {
+  } catch (error) {
     console.error("[Sequences] Error processing sends:", error);
     throw error;
   }
@@ -211,7 +210,7 @@ async function sendEmail(params: {
 
     console.log(`[Email] Sent to ${params.to}:`, result.messageId);
     return { success: true, messageId: result.messageId };
-  } catch (error: any) {
+  } catch (error) {
     console.error(`[Email] Error sending to ${params.to}:`, error);
     return { success: false };
   }
@@ -220,7 +219,11 @@ async function sendEmail(params: {
 /**
  * Enroll a contact in a sequence (initialize with first step)
  */
-export async function enrollContactInSequence(sequenceId: string, contactId: string) {
+export async function enrollContactInSequence(
+  userId: string,
+  sequenceId: string,
+  contactId: string,
+) {
   // Get first step
   const { data: firstStep } = await supabase
     .from("sequence_steps")
@@ -240,7 +243,7 @@ export async function enrollContactInSequence(sequenceId: string, contactId: str
   return {
     sequence_id: sequenceId,
     contact_id: contactId,
-    user_id: DEFAULT_USER_ID,
+    user_id: userId,
     state: "waiting",
     next_send_at: nextSendAt,
   };

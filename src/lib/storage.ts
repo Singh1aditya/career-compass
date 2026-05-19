@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_USER_ID } from "@/lib/constants";
 
 // Tables added by local migrations not yet applied to the live DB — cast until migrations run.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,6 +32,7 @@ export function validateFile(file: File): string | null {
 }
 
 export async function uploadAttachment(
+  userId: string,
   file: File,
   parent: { application_id?: string; contact_id?: string; company_id?: string },
   kind: string = "other",
@@ -41,7 +41,7 @@ export async function uploadAttachment(
   if (validationError) return { data: null, error: validationError };
 
   const ext = file.name.split(".").pop();
-  const path = `${DEFAULT_USER_ID}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
@@ -52,7 +52,7 @@ export async function uploadAttachment(
   const { data, error: dbError } = await db
     .from("attachments")
     .insert({
-      user_id: DEFAULT_USER_ID,
+      user_id: userId,
       storage_path: path,
       filename: file.name,
       mime_type: file.type,

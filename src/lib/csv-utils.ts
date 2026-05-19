@@ -37,14 +37,14 @@ export function parseCSVFile(file: File): Promise<{ rows: CSVRow[]; columns: str
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (results: any) => {
+      complete: (results: Papa.ParseResult<CSVRow>) => {
         const columns = Object.keys(results.data[0] || {});
         resolve({
           rows: results.data,
           columns,
         });
       },
-      error: (error: any) => {
+      error: (error: Error) => {
         reject(new Error(`CSV parsing error: ${error.message}`));
       },
     });

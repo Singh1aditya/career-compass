@@ -16,7 +16,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { DEFAULT_USER_ID } from "../_shared/constants.ts";
+import { getUserIdFromJWT, LEGACY_USER_ID } from "../_shared/constants.ts";
 
 interface CapturePayload {
   url?: string;
@@ -40,6 +40,8 @@ serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
+  const userId = getUserIdFromJWT(req) ?? LEGACY_USER_ID;
+
   let payload: CapturePayload;
   try {
     payload = await req.json();
@@ -50,7 +52,8 @@ serve(async (req: Request) => {
     });
   }
 
-  let { role_title, company_name, location, source, notes, url, jd_text } = payload;
+  let { role_title, company_name, location, source } = payload;
+  const { notes, url, jd_text } = payload;
 
   // If we have JD text and missing fields, parse with Claude
   if (jd_text && (!role_title || !company_name)) {
@@ -122,7 +125,7 @@ serve(async (req: Request) => {
     const { data: existingCompany } = await supabase
       .from("companies")
       .select("id")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", userId)
       .ilike("name", company_name)
       .maybeSingle();
 
@@ -131,7 +134,7 @@ serve(async (req: Request) => {
     } else {
       const { data: newCompany } = await supabase
         .from("companies")
-        .insert({ user_id: DEFAULT_USER_ID, name: company_name })
+        .insert({ user_id: userId, name: company_name })
         .select("id")
         .single();
       company_id = newCompany?.id ?? null;
@@ -141,7 +144,7 @@ serve(async (req: Request) => {
   const { data: application, error } = await supabase
     .from("applications")
     .insert({
-      user_id: DEFAULT_USER_ID,
+      user_id: userId,
       role_title,
       company_name: company_name ?? null,
       company_id,

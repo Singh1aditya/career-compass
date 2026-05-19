@@ -15,7 +15,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { DEFAULT_USER_ID } from "../_shared/constants.ts";
+import { listGmailUsers, LEGACY_USER_ID } from "../_shared/constants.ts";
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -27,11 +27,15 @@ serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
+  // Single-user assumption today. To extend, loop over listGmailUsers().
+  const users = await listGmailUsers(supabase);
+  const userId = users[0] ?? LEGACY_USER_ID;
+
   // Check digest is enabled
   const { data: settings } = await supabase
     .from("user_settings")
     .select("digest_enabled, display_name")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (!settings?.digest_enabled) {
@@ -45,7 +49,7 @@ serve(async (req: Request) => {
   const { data: existing } = await supabase
     .from("digest_log")
     .select("id")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .gte("sent_at", today + "T00:00:00Z")
     .maybeSingle();
 
@@ -67,7 +71,7 @@ serve(async (req: Request) => {
     supabase
       .from("follow_ups")
       .select("id, description, due_date, priority")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", userId)
       .eq("status", "pending")
       .lt("due_date", today)
       .order("due_date"),
@@ -82,13 +86,13 @@ serve(async (req: Request) => {
     supabase
       .from("applications")
       .select("id")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", userId)
       .gte("applied_date", weekStart.toISOString()),
 
     supabase
       .from("sequences")
       .select("id, name, updated_at")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", userId)
       .eq("status", "active")
       .lt("updated_at", sevenDaysAgo),
   ]);
@@ -102,7 +106,7 @@ serve(async (req: Request) => {
   const { data: oauthToken } = await supabase
     .from("oauth_tokens")
     .select("access_token, refresh_token, expires_at, email")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .eq("provider", "gmail")
     .maybeSingle();
 
@@ -140,7 +144,7 @@ serve(async (req: Request) => {
             access_token: refreshed.access_token,
             expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
           })
-          .eq("user_id", DEFAULT_USER_ID)
+          .eq("user_id", userId)
           .eq("provider", "gmail");
       }
     }
@@ -162,7 +166,7 @@ serve(async (req: Request) => {
 
   // Log the digest (idempotency record)
   await supabase.from("digest_log").insert({
-    user_id: DEFAULT_USER_ID,
+    user_id: userId,
     summary,
     sent_at: now.toISOString(),
   });

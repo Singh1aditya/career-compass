@@ -10,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { DEFAULT_USER_ID } from "../_shared/constants.ts";
+import { getUserIdFromJWT, LEGACY_USER_ID } from "../_shared/constants.ts";
 
 interface SyncRequest {
   operation: "create" | "update" | "delete";
@@ -26,6 +26,8 @@ serve(async (req: Request) => {
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
+
+  const userId = getUserIdFromJWT(req) ?? LEGACY_USER_ID;
 
   let body: SyncRequest;
   try {
@@ -43,7 +45,7 @@ serve(async (req: Request) => {
   const { data: oauthToken } = await supabase
     .from("oauth_tokens")
     .select("access_token, refresh_token, expires_at")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .eq("provider", "gmail")
     .maybeSingle();
 
@@ -72,7 +74,7 @@ serve(async (req: Request) => {
         access_token: refreshed.access_token,
         expires_at: new Date(Date.now() + refreshed.expires_in * 1000).toISOString(),
       })
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", userId)
       .eq("provider", "gmail");
   }
 

@@ -28,19 +28,19 @@ describe("enrollContactInSequence", () => {
   });
 
   it("returns a payload with correct sequence_id and contact_id", async () => {
-    const payload = await enrollContactInSequence("seq-1", "contact-1");
+    const payload = await enrollContactInSequence("user-1", "seq-1", "contact-1");
     expect(payload.sequence_id).toBe("seq-1");
     expect(payload.contact_id).toBe("contact-1");
   });
 
   it("sets initial state to 'waiting'", async () => {
-    const payload = await enrollContactInSequence("seq-1", "contact-1");
+    const payload = await enrollContactInSequence("user-1", "seq-1", "contact-1");
     expect(payload.state).toBe("waiting");
   });
 
   it("calculates next_send_at based on delay_days (2 days ahead)", async () => {
     const before = Date.now();
-    const payload = await enrollContactInSequence("seq-1", "contact-1");
+    const payload = await enrollContactInSequence("user-1", "seq-1", "contact-1");
     const after = Date.now();
 
     const nextSendAt = new Date(payload.next_send_at as string).getTime();

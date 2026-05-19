@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 const TYPES = ["email", "call", "meeting", "linkedin", "other"];
 const DIRECTIONS = ["outbound", "inbound"];
 
@@ -38,6 +38,7 @@ interface Props {
 }
 
 export function LogInteractionDialog({ contactId, applicationId, trigger, onLogged }: Props) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState("email");
   const [direction, setDirection] = useState("outbound");
@@ -77,7 +78,7 @@ export function LogInteractionDialog({ contactId, applicationId, trigger, onLogg
   const handleSave = async () => {
     setSaving(true);
     const { error } = await supabase.from("interactions").insert({
-      user_id: DEFAULT_USER_ID,
+      user_id: user!.id,
       contact_id: contactId ?? null,
       application_id: linkedAppId || null,
       type,
@@ -96,7 +97,7 @@ export function LogInteractionDialog({ contactId, applicationId, trigger, onLogg
 
     if (followUpOpen && followUpDesc.trim()) {
       const { error: fuErr } = await supabase.from("follow_ups").insert({
-        user_id: DEFAULT_USER_ID,
+        user_id: user!.id,
         contact_id: contactId ?? null,
         application_id: linkedAppId || null,
         due_date: followUpDate,

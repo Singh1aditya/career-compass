@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.0";
+import { listGmailUsers, LEGACY_USER_ID } from "../_shared/constants.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,13 +18,17 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    import { DEFAULT_USER_ID } from "../_shared/constants.ts";
+    // Single-user assumption today: pick the first connected Gmail user
+    // and run reply detection for their threads. To extend to multi-user,
+    // wrap the body below in `for (const userId of await listGmailUsers(supabase))`.
+    const users = await listGmailUsers(supabase);
+    const userId = users[0] ?? LEGACY_USER_ID;
 
     // Get Gmail token
     const { data: oauthToken } = await supabase
       .from("oauth_tokens")
       .select("*")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", userId)
       .eq("provider", "gmail")
       .single();
 
@@ -119,7 +124,7 @@ serve(async (req: Request) => {
             .eq("id", recipientData.id);
 
           await supabase.from("interactions").insert({
-            user_id: DEFAULT_USER_ID,
+            user_id: userId,
             contact_id: recipientData.contact_id,
             type: "email",
             direction: "inbound",
@@ -136,12 +141,12 @@ serve(async (req: Request) => {
 
           updated++;
         }
-      } catch (error: any) {
+      } catch (error) {
         await supabase.from("automation_logs").insert({
           level: "error",
           function_name: "monitor-gmail-replies",
           message: "thread check error",
-          payload: { threadId, error: error.message },
+          payload: { threadId, error: error instanceof Error ? error.message : String(error) },
         });
       }
     }
@@ -157,12 +162,12 @@ serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("[Function Error]", error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         checked: 0,
         updated: 0,
       }),
@@ -221,8 +226,8 @@ async function checkThreadForReply(
     }
 
     return { hasReply: false, isOutOfOffice: false };
-  } catch (error: any) {
-    console.error("[Gmail API Error]", error.message);
+  } catch (error) {
+    console.error("[Gmail API Error]", error instanceof Error ? error.message : String(error));
     return { hasReply: false, isOutOfOffice: false };
   }
 }

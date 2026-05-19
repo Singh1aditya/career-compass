@@ -16,6 +16,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -37,7 +47,6 @@ import {
 import { ApplicationsKanban } from "@/components/ApplicationsKanban";
 import { BulkActionBar } from "@/components/BulkActionBar";
 import { APPLICATION_STATUSES as statuses, statusColors } from "@/lib/status";
-import { DEFAULT_USER_ID } from "@/lib/constants";
 
 interface Application {
   id: string;
@@ -74,6 +83,7 @@ export function ApplicationsPage() {
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
   const [bulkNewStatus, setBulkNewStatus] = useState("applied");
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   const loadApps = useCallback(async () => {
     const { data } = await supabase
@@ -134,7 +144,7 @@ export function ApplicationsPage() {
     } else {
       const { error } = await supabase
         .from("applications")
-        .insert({ ...payload, user_id: DEFAULT_USER_ID });
+        .insert({ ...payload, user_id: user!.id });
       if (error) {
         toast.error(error.message);
         return;
@@ -181,20 +191,21 @@ export function ApplicationsPage() {
     loadApps();
   };
 
-  const bulkDelete = async () => {
+  const bulkDelete = () => {
+    if (checkedIds.size === 0) return;
+    setBulkDeleteOpen(true);
+  };
+
+  const confirmBulkDelete = async () => {
     const ids = Array.from(checkedIds);
-    if (
-      !window.confirm(
-        `Delete ${ids.length} application${ids.length !== 1 ? "s" : ""}? This cannot be undone.`,
-      )
-    )
-      return;
     const { error } = await supabase.from("applications").delete().in("id", ids);
     if (error) {
       toast.error(error.message);
       return;
     }
     toast.success(`Deleted ${ids.length} application${ids.length !== 1 ? "s" : ""}`);
+    setBulkDeleteOpen(false);
+    setCheckedIds(new Set());
     loadApps();
   };
 
@@ -380,7 +391,24 @@ export function ApplicationsPage() {
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
             <Briefcase className="h-10 w-10 mx-auto mb-2 opacity-50" />
-            <p>No applications found. Start tracking your job search!</p>
+            {searchQuery || statusFilter !== "all" ? (
+              <>
+                <p>No applications match your filters.</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-3"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setStatusFilter("all");
+                  }}
+                >
+                  Clear filters
+                </Button>
+              </>
+            ) : (
+              <p>No applications yet. Start tracking your job search!</p>
+            )}
           </CardContent>
         </Card>
       ) : viewMode === "kanban" ? (
@@ -491,6 +519,29 @@ export function ApplicationsPage() {
           },
         ]}
       />
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete {checkedIds.size} application{checkedIds.size !== 1 ? "s" : ""}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the selected applications along with their notes,
+              interactions, and follow-ups. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

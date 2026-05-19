@@ -15,7 +15,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { DEFAULT_USER_ID } from "../_shared/constants.ts";
+import { listGmailUsers, LEGACY_USER_ID } from "../_shared/constants.ts";
 
 // Gmail search query that catches both confirmation and rejection emails
 const GMAIL_QUERY = [
@@ -97,8 +97,13 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
+    // Single-user assumption today. To extend to multi-user, wrap the
+    // body in `for (const userId of await listGmailUsers(supabase))`.
+    const users = await listGmailUsers(supabase);
+    const userId = users[0] ?? LEGACY_USER_ID;
+
     // Fetch and refresh OAuth token if needed
-    const accessToken = await getValidAccessToken(supabase);
+    const accessToken = await getValidAccessToken(supabase, userId);
     if (!accessToken) {
       return jsonResponse(
         { success: false, error: "Gmail not connected. Connect in Settings." },
@@ -154,7 +159,7 @@ serve(async (req: Request) => {
           const { data: created } = await supabase
             .from("applications")
             .insert({
-              user_id: DEFAULT_USER_ID,
+              user_id: userId,
               role_title: detected.role,
               company_name: detected.company,
               status: "applied",
@@ -195,7 +200,7 @@ serve(async (req: Request) => {
 
       // Record that we processed this email
       await supabase.from("processed_emails").insert({
-        user_id: DEFAULT_USER_ID,
+        user_id: userId,
         gmail_message_id: msg.id,
         gmail_thread_id: msg.threadId,
         classification,
@@ -210,9 +215,12 @@ serve(async (req: Request) => {
     }
 
     return jsonResponse({ success: true, summary });
-  } catch (err: any) {
+  } catch (err) {
     console.error("[scan-job-emails]", err);
-    return jsonResponse({ success: false, error: err.message }, 500);
+    return jsonResponse(
+      { success: false, error: err instanceof Error ? err.message : String(err) },
+      500,
+    );
   }
 });
 
@@ -374,7 +382,7 @@ function extractCompany(subject: string, body: string, fromHeader: string): stri
   }
 
   // Fall back to email domain (skip ATS domains)
-  const domainMatch = fromHeader.match(/@([\w.\-]+)/);
+  const domainMatch = fromHeader.match(/@([\w.-]+)/);
   if (domainMatch && domainMatch[1]) {
     const domain = domainMatch[1].toLowerCase();
     if (!ATS_DOMAINS.has(domain)) {
@@ -419,23 +427,23 @@ async function findApplication(supabase: any, company: string, role: string | nu
 
 // --- OAuth token handling ---
 
-async function getValidAccessToken(supabase: any): Promise<string | null> {
+async function getValidAccessToken(supabase: any, userId: string): Promise<string | null> {
   const { data: token } = await supabase
     .from("oauth_tokens")
     .select("*")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .eq("provider", "gmail")
     .single();
 
   if (!token) return null;
 
   if (token.expires_at && new Date(token.expires_at) < new Date()) {
-    const ok = await refreshGmailToken(supabase, token.refresh_token);
+    const ok = await refreshGmailToken(supabase, userId, token.refresh_token);
     if (!ok) return null;
     const { data: fresh } = await supabase
       .from("oauth_tokens")
       .select("access_token")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", userId)
       .eq("provider", "gmail")
       .single();
     return fresh?.access_token ?? null;
@@ -443,7 +451,11 @@ async function getValidAccessToken(supabase: any): Promise<string | null> {
   return token.access_token;
 }
 
-async function refreshGmailToken(supabase: any, refreshToken: string): Promise<boolean> {
+async function refreshGmailToken(
+  supabase: any,
+  userId: string,
+  refreshToken: string,
+): Promise<boolean> {
   const clientId = Deno.env.get("GOOGLE_CLIENT_ID");
   const clientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET");
   if (!clientId || !clientSecret) return false;
@@ -467,7 +479,7 @@ async function refreshGmailToken(supabase: any, refreshToken: string): Promise<b
       access_token: tokens.access_token,
       expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
     })
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .eq("provider", "gmail");
   return true;
 }

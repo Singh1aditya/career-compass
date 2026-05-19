@@ -1,35 +1,37 @@
 import { useState, useEffect, useCallback } from "react";
-import type { User } from "@supabase/supabase-js";
-import { DEFAULT_USER_ID } from "@/lib/constants";
-
-const DEFAULT_USER: User = {
-  id: DEFAULT_USER_ID,
-  aud: "authenticated",
-  role: "authenticated",
-  email: "personal@carecrm.local",
-  email_confirmed_at: new Date().toISOString(),
-  phone: "",
-  confirmed_at: new Date().toISOString(),
-  last_sign_in_at: new Date().toISOString(),
-  app_metadata: {},
-  user_metadata: {},
-  identities: [],
-  is_anonymous: false,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-} as unknown as User;
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useAuth() {
-  const [user] = useState<User>(DEFAULT_USER);
-  const [loading, setLoading] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(false);
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      setLoading(false);
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = useCallback(async () => {
-    // No-op for personal app
+    await supabase.auth.signOut();
   }, []);
 
-  return { user, session: null, loading, signOut };
+  return { user, session, loading, signOut };
 }

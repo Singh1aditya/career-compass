@@ -20,7 +20,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { DEFAULT_USER_ID } from "../_shared/constants.ts";
+import { getUserIdFromJWT, LEGACY_USER_ID } from "../_shared/constants.ts";
 
 // Approximate cost per 1M tokens (MTok) in USD — used for logging only
 const COST_TABLE: Record<string, { in: number; out: number }> = {
@@ -45,6 +45,8 @@ serve(async (req: Request) => {
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
+
+  const userId = getUserIdFromJWT(req) ?? LEGACY_USER_ID;
 
   const body = await req.json();
   const { kind, context } = body as { kind: string; context: Record<string, string> };
@@ -147,7 +149,7 @@ Email signature or bio: ${context.signature ?? ""}`;
   supabase
     .from("ai_runs")
     .insert({
-      user_id: DEFAULT_USER_ID,
+      user_id: userId,
       kind,
       model,
       output,

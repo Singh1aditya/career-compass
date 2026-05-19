@@ -1,16 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_USER_ID } from "@/lib/constants";
 import { format, subDays, startOfWeek, getISOWeek, getISOWeekYear } from "date-fns";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
 // Returns counts per status across all applications
-export async function fetchFunnelData(): Promise<{ status: string; count: number }[]> {
+export async function fetchFunnelData(
+  userId: string,
+): Promise<{ status: string; count: number }[]> {
   const { data, error } = await supabase
     .from("applications")
     .select("status")
-    .eq("user_id", DEFAULT_USER_ID);
+    .eq("user_id", userId);
 
   if (error || !data) return [];
 
@@ -134,7 +135,7 @@ export async function fetchWeeklyTrend(): Promise<{ week: string; count: number 
 }
 
 // Returns { applications, replies, interviews, followUps } for current week
-export async function fetchThisWeekStats(): Promise<{
+export async function fetchThisWeekStats(userId: string): Promise<{
   applications: number;
   replies: number;
   interviews: number;
@@ -145,7 +146,7 @@ export async function fetchThisWeekStats(): Promise<{
   const { data: apps } = await supabase
     .from("applications")
     .select("id")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .gte("created_at", weekStart);
 
   const { data: replies } = await supabase
@@ -158,7 +159,7 @@ export async function fetchThisWeekStats(): Promise<{
   const { data: interviews } = await supabase
     .from("applications")
     .select("id")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .eq("status", "interviewing")
     .gte("updated_at", weekStart);
 

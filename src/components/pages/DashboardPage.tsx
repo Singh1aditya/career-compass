@@ -229,10 +229,13 @@ export function DashboardPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="shrink-0 h-7 w-7 p-0"
+                        className="shrink-0 h-7 px-2 gap-1 text-success hover:text-success"
                         onClick={() => completeFollowUp(fu.id)}
+                        aria-label="Mark follow-up complete"
+                        title="Mark complete"
                       >
-                        <CheckCircle2 className="h-4 w-4 text-success" />
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span className="text-xs">Done</span>
                       </Button>
                     </div>
                   );

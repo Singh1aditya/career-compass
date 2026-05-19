@@ -21,6 +21,7 @@ import {
   fetchWeeklyTrend,
   fetchThisWeekStats,
 } from "@/lib/insights";
+import { useAuth } from "@/hooks/use-auth";
 
 // Hex palette for recharts (Tailwind classes don't work inside SVG)
 const STATUS_HEX: Record<string, string> = {
@@ -72,6 +73,7 @@ function SkeletonCard({ className }: { className?: string }) {
 export function InsightsPage() {
   const search = useSearch({ from: "/_authenticated/insights" });
   const navigate = useNavigate({ from: "/insights" });
+  const { user } = useAuth();
 
   // days=0 means "all time"
   const days = (search as { days?: number }).days ?? 30;
@@ -96,17 +98,18 @@ export function InsightsPage() {
   });
 
   useEffect(() => {
+    if (!user) return;
     let cancelled = false;
     setLoading(true);
 
     const effectiveDays = days === 0 ? 3650 : days; // "all time" = 10 years
 
     Promise.all([
-      fetchFunnelData(),
+      fetchFunnelData(user.id),
       fetchResponseRate(effectiveDays),
       fetchTimeInStage(),
       fetchWeeklyTrend(),
-      fetchThisWeekStats(),
+      fetchThisWeekStats(user.id),
     ]).then(([f, r, s, t, w]) => {
       if (cancelled) return;
       setFunnel(f);
@@ -120,7 +123,7 @@ export function InsightsPage() {
     return () => {
       cancelled = true;
     };
-  }, [days]);
+  }, [days, user]);
 
   // Separate pipeline from rejected/withdrawn for funnel
   const pipelineFunnel = PIPELINE_ORDER.map((status) => {

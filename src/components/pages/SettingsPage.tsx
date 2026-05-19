@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { EmailScanStatus } from "@/components/EmailScanStatus";
 import { UserSettingsPanel } from "@/components/UserSettingsPanel";
 import { DigestPreview } from "@/components/DigestPreview";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -39,6 +39,7 @@ const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({
 }));
 
 export function SettingsPage() {
+  const { user } = useAuth();
   const [gmailConnected, setGmailConnected] = useState(false);
   const [gmailEmail, setGmailEmail] = useState<string | null>(null);
   const [gmailHasCalendarScope, setGmailHasCalendarScope] = useState(false);
@@ -53,22 +54,24 @@ export function SettingsPage() {
   const [aiUsage, setAiUsage] = useState<AIUsage | null>(null);
 
   useEffect(() => {
+    if (!user) return;
     checkGmailConnection();
     loadReminderSettings();
     loadAiUsage();
-  }, []);
+  }, [user]);
 
   const checkGmailConnection = async () => {
     try {
       const { data } = await supabase
         .from("oauth_tokens")
         .select("email, scope")
-        .eq("user_id", DEFAULT_USER_ID)
+        .eq("user_id", user!.id)
         .eq("provider", "gmail")
         .maybeSingle();
       setGmailConnected(!!data);
-      setGmailEmail((data as any)?.email ?? null);
-      setGmailHasCalendarScope(((data as any)?.scope ?? "").includes("calendar.events"));
+      const tokenRow = data as { email: string | null; scope: string | null } | null;
+      setGmailEmail(tokenRow?.email ?? null);
+      setGmailHasCalendarScope((tokenRow?.scope ?? "").includes("calendar.events"));
     } catch {
       setGmailConnected(false);
     } finally {
@@ -80,7 +83,7 @@ export function SettingsPage() {
     const { data } = await db
       .from("user_settings")
       .select("digest_enabled, digest_hour, auto_followups_enabled")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", user!.id)
       .maybeSingle();
     if (data) {
       setReminderSettings({
@@ -94,7 +97,7 @@ export function SettingsPage() {
   const saveReminderSettings = async () => {
     setReminderSaving(true);
     const { error } = await db.from("user_settings").upsert({
-      user_id: DEFAULT_USER_ID,
+      user_id: user!.id,
       ...reminderSettings,
       updated_at: new Date().toISOString(),
     });
@@ -114,7 +117,11 @@ export function SettingsPage() {
       } = await supabase.auth.getSession();
       const res = await supabase.functions.invoke("send-daily-digest");
       if (res.error) throw new Error(res.error.message);
-      const body = res.data as any;
+      const body = res.data as {
+        skipped?: boolean;
+        reason?: string;
+        summary?: { overdue_count?: number; replies_count?: number };
+      };
       if (body?.skipped) {
         toast.info(`Digest skipped: ${body.reason}`);
       } else {
@@ -122,8 +129,8 @@ export function SettingsPage() {
           `Digest sent! ${body?.summary?.overdue_count ?? 0} overdue, ${body?.summary?.replies_count ?? 0} replies`,
         );
       }
-    } catch (e: any) {
-      toast.error(e?.message ?? "Failed to send digest");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to send digest");
     } finally {
       setDigestRunning(false);
     }
@@ -133,12 +140,12 @@ export function SettingsPage() {
     try {
       const res = await supabase.functions.invoke("generate-auto-followups");
       if (res.error) throw new Error(res.error.message);
-      const body = res.data as any;
+      const body = res.data as { created?: number };
       toast.success(
         `Generated ${body?.created ?? 0} auto follow-up${body?.created !== 1 ? "s" : ""}`,
       );
-    } catch (e: any) {
-      toast.error(e?.message ?? "Failed to generate follow-ups");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to generate follow-ups");
     }
   };
 
@@ -148,7 +155,7 @@ export function SettingsPage() {
     const { data } = await db
       .from("ai_runs")
       .select("kind, tokens_in, tokens_out, cost_usd")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", user!.id)
       .gte("created_at", since.toISOString());
 
     if (!data) return;
@@ -195,7 +202,7 @@ export function SettingsPage() {
       const { error } = await supabase
         .from("oauth_tokens")
         .delete()
-        .eq("user_id", DEFAULT_USER_ID)
+        .eq("user_id", user!.id)
         .eq("provider", "gmail");
       if (error) throw error;
       setGmailConnected(false);

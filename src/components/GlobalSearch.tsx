@@ -65,9 +65,24 @@ export function GlobalSearch({ collapsed = false }: { collapsed?: boolean } = {}
 
   const total = totalResultCount(results);
 
-  // When sidebar is collapsed we still need the keydown listener mounted
-  // (otherwise Cmd+K wouldn't work), so we keep the component but hide the UI.
-  if (collapsed) return null;
+  // When sidebar is collapsed, show a compact icon button instead of the full input.
+  if (collapsed) {
+    return (
+      <div className="px-2 pt-2 pb-1 flex justify-center">
+        <button
+          type="button"
+          aria-label="Search (⌘K)"
+          title="Search (⌘K)"
+          onClick={() => navigate({ to: "/search" })}
+          className="h-8 w-8 rounded-md hover:bg-accent flex items-center justify-center text-muted-foreground"
+        >
+          <Search className="h-4 w-4" />
+        </button>
+        {/* Offscreen input so the Cmd+K shortcut still has a focus target */}
+        <input ref={inputRef} className="sr-only" tabIndex={-1} aria-hidden="true" />
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="relative px-2 pt-2 pb-1">

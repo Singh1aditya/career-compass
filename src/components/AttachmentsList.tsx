@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Paperclip, Trash2, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 type Parent = {
   application_id?: string;
@@ -43,6 +44,7 @@ function formatSize(bytes: number | null): string {
 }
 
 export function AttachmentsList({ parent }: Props) {
+  const { user } = useAuth();
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -67,7 +69,7 @@ export function AttachmentsList({ parent }: Props) {
     const fileArray = Array.from(files);
     await Promise.all(
       fileArray.map(async (file) => {
-        const { data, error } = await uploadAttachment(file, parent, kind);
+        const { data, error } = await uploadAttachment(user!.id, file, parent, kind);
         if (error) {
           toast.error(`${file.name}: ${error}`);
         } else if (data) {

@@ -24,5 +24,13 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    // Supabase Edge Functions run on Deno and consume untyped external APIs
+    // (Gmail, Anthropic). Relaxed typing for these handlers.
+    files: ["supabase/functions/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
   eslintPluginPrettier,
 );

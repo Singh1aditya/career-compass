@@ -519,7 +519,9 @@ async function seed() {
       summary: "James — offer discussion",
       date: "2026-05-06",
       user_id: USER,
-      application_id: appsData?.find((a: any) => a.role_title === "Principal Engineer")?.id,
+      application_id: appsData?.find(
+        (a: { role_title: string }) => a.role_title === "Principal Engineer",
+      )?.id,
     },
   ];
   const { data: intData, error: iErr } = await supabase
@@ -543,7 +545,9 @@ async function seed() {
       user_id: USER,
     },
     {
-      application_id: appsData?.find((a: any) => a.role_title === "Principal Engineer")?.id,
+      application_id: appsData?.find(
+        (a: { role_title: string }) => a.role_title === "Principal Engineer",
+      )?.id,
       content:
         "Stripe offer breakdown: $280k base, $400k equity over 4 years, $50k signing. Pushing on equity.",
       user_id: USER,

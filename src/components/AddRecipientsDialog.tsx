@@ -30,7 +30,7 @@ interface AddRecipientsDialogProps {
   targetCompany?: string | null;
 }
 
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 const TYPE_GROUPS: Array<{ key: string; label: string }> = [
   { key: "recruiter", label: "Recruiters" },
@@ -45,6 +45,7 @@ export function AddRecipientsDialog({
   onRecipientsAdded,
   targetCompany,
 }: AddRecipientsDialogProps) {
+  const { user } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
@@ -132,7 +133,7 @@ export function AddRecipientsDialog({
       const recipients = Array.from(selectedContacts).map((contactId) => ({
         sequence_id: sequenceId,
         contact_id: contactId,
-        user_id: DEFAULT_USER_ID,
+        user_id: user!.id,
         state: "waiting",
       }));
 
@@ -144,8 +145,10 @@ export function AddRecipientsDialog({
       setSelectedContacts(new Set());
       setSearchQuery("");
       onRecipientsAdded();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add recipients");
+    } catch (error) {
+      toast.error(
+        (error instanceof Error ? error.message : String(error)) || "Failed to add recipients",
+      );
     } finally {
       setLoading(false);
     }

@@ -13,7 +13,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { DEFAULT_USER_ID } from "../_shared/constants.ts";
+import { listGmailUsers, LEGACY_USER_ID } from "../_shared/constants.ts";
 const STALE_DAYS = 7;
 
 serve(async (req: Request) => {
@@ -26,11 +26,15 @@ serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
+  // Single-user assumption today. To extend, loop over listGmailUsers().
+  const users = await listGmailUsers(supabase);
+  const userId = users[0] ?? LEGACY_USER_ID;
+
   // Check if auto-followups are enabled for this user
   const { data: settings } = await supabase
     .from("user_settings")
     .select("auto_followups_enabled")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .maybeSingle();
 
   if (settings && settings.auto_followups_enabled === false) {
@@ -47,7 +51,7 @@ serve(async (req: Request) => {
   const { data: staleApps } = await supabase
     .from("applications")
     .select("id, role_title, company_name")
-    .eq("user_id", DEFAULT_USER_ID)
+    .eq("user_id", userId)
     .eq("status", "applied")
     .lt("applied_date", cutoff);
 
@@ -77,7 +81,7 @@ serve(async (req: Request) => {
     const dueDate = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     await supabase.from("follow_ups").insert({
-      user_id: DEFAULT_USER_ID,
+      user_id: userId,
       application_id: app.id,
       description: `Follow up on application for ${app.role_title}${app.company_name ? ` at ${app.company_name}` : ""} — no activity in ${STALE_DAYS} days`,
       due_date: dueDate,
@@ -121,7 +125,7 @@ serve(async (req: Request) => {
     const dueDate = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     await supabase.from("follow_ups").insert({
-      user_id: DEFAULT_USER_ID,
+      user_id: userId,
       contact_id: r.contact_id,
       description: `No reply from ${contactName} in sequence "${sequenceName}" — consider a manual follow-up`,
       due_date: dueDate,

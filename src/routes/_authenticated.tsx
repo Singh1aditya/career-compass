@@ -2,6 +2,8 @@ import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileNav } from "@/components/MobileNav";
+import { AuthForm } from "@/components/AuthForm";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -25,8 +27,21 @@ const pageTitles: Record<string, string> = {
 
 function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user, loading } = useAuth();
   const title =
     Object.entries(pageTitles).find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? "Career CRM";
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
+        Loading…
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthForm />;
+  }
 
   return (
     <SidebarProvider>

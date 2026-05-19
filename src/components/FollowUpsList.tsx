@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Clock, Plus, X } from "lucide-react";
 import { toast } from "sonner";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 interface FollowUp {
   id: string;
@@ -30,6 +30,7 @@ function isToday(dateStr: string) {
 }
 
 export function FollowUpsList({ contactId, applicationId }: Props) {
+  const { user } = useAuth();
   const [items, setItems] = useState<FollowUp[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -54,7 +55,7 @@ export function FollowUpsList({ contactId, applicationId }: Props) {
   const create = async () => {
     if (!desc.trim()) return;
     const { error } = await supabase.from("follow_ups").insert({
-      user_id: DEFAULT_USER_ID,
+      user_id: user!.id,
       contact_id: contactId ?? null,
       application_id: applicationId ?? null,
       description: desc.trim(),

@@ -3,9 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Note {
   id: string;
@@ -19,10 +29,12 @@ interface Props {
 }
 
 export function NotesList({ contactId, applicationId }: Props) {
+  const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     load();
@@ -40,7 +52,7 @@ export function NotesList({ contactId, applicationId }: Props) {
   const handleAdd = async () => {
     if (!draft.trim()) return;
     const { error } = await supabase.from("notes").insert({
-      user_id: DEFAULT_USER_ID,
+      user_id: user!.id,
       contact_id: contactId ?? null,
       application_id: applicationId ?? null,
       content: draft.trim(),
@@ -116,7 +128,8 @@ export function NotesList({ contactId, applicationId }: Props) {
                   variant="ghost"
                   className="h-7 w-7 p-0 shrink-0"
                   aria-label="Delete note"
-                  onClick={() => handleDelete(n.id)}
+                  title="Delete note"
+                  onClick={() => setConfirmDeleteId(n.id)}
                 >
                   <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                 </Button>
@@ -125,6 +138,31 @@ export function NotesList({ contactId, applicationId }: Props) {
           ))}
         </div>
       )}
+
+      <AlertDialog
+        open={confirmDeleteId !== null}
+        onOpenChange={(o) => !o && setConfirmDeleteId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this note?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the note. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (confirmDeleteId) await handleDelete(confirmDeleteId);
+                setConfirmDeleteId(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

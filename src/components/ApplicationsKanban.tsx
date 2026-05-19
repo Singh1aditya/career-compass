@@ -67,8 +67,9 @@ function ApplicationCard({ app, dragging }: { app: Application; dragging?: boole
   const navigate = useNavigate();
   return (
     <Card
-      className={`cursor-grab active:cursor-grabbing ${dragging ? "opacity-50" : ""} hover:shadow-sm transition-shadow`}
-      onDoubleClick={() => navigate({ to: `/applications/${app.id}` })}
+      className={`cursor-pointer active:cursor-grabbing ${dragging ? "opacity-50" : ""} hover:shadow-sm hover:border-primary/50 transition-all`}
+      onClick={() => navigate({ to: `/applications/${app.id}` })}
+      title="Click to open · drag to change status"
     >
       <CardContent className="p-3 space-y-1.5">
         <div className="font-medium text-sm leading-tight">{app.role_title}</div>

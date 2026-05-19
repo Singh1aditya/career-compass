@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,11 +20,13 @@ interface DigestData {
 }
 
 export function DigestPreview() {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<DigestData | null>(null);
 
   const load = async () => {
+    if (!user) return;
     setLoading(true);
     try {
       const now = new Date();
@@ -35,7 +37,7 @@ export function DigestPreview() {
         supabase
           .from("follow_ups")
           .select("id, description, due_date")
-          .eq("user_id", DEFAULT_USER_ID)
+          .eq("user_id", user.id)
           .neq("status", "completed")
           .lt("due_date", now.toISOString())
           .order("due_date")
@@ -43,7 +45,7 @@ export function DigestPreview() {
         supabase
           .from("interactions")
           .select("id, summary, date")
-          .eq("user_id", DEFAULT_USER_ID)
+          .eq("user_id", user.id)
           .eq("direction", "inbound")
           .gte("date", yesterday)
           .order("date", { ascending: false })
@@ -51,7 +53,7 @@ export function DigestPreview() {
         supabase
           .from("applications")
           .select("status, created_at")
-          .eq("user_id", DEFAULT_USER_ID)
+          .eq("user_id", user.id)
           .gte("created_at", weekAgo),
       ]);
 

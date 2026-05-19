@@ -24,7 +24,7 @@ const FUNCTIONS: Pick<FunctionStatus, "name" | "description" | "category">[] = [
     category: "automation",
   },
   { name: "scan-job-emails", description: "Job email scanner", category: "email" },
-  { name: "gmail-poll-replies", description: "Gmail reply poller", category: "email" },
+  { name: "monitor-gmail-replies", description: "Gmail reply monitor", category: "email" },
   { name: "process-pending-sends", description: "Pending send processor", category: "email" },
   { name: "ai-assist", description: "AI compose assistant", category: "ai" },
   { name: "quick-capture", description: "Quick capture (bookmarklet)", category: "automation" },

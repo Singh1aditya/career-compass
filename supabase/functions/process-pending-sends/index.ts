@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.0";
+import { listGmailUsers } from "../_shared/constants.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,157 +35,159 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    import { DEFAULT_USER_ID } from "../_shared/constants.ts";
-
     await log(supabase, "info", "process-pending-sends", "tick start");
 
-    // Read send caps from user_settings (with fallbacks)
-    const { data: settings } = await supabase
-      .from("user_settings")
-      .select("per_tick_email_cap, daily_email_cap, display_name, signature")
-      .eq("user_id", DEFAULT_USER_ID)
-      .maybeSingle();
-    const perTickCap: number = settings?.per_tick_email_cap ?? 10;
-    const sender = {
-      display_name: settings?.display_name ?? "You",
-      signature: settings?.signature ?? "",
-    };
-
-    // Get all active sequences
-    const { data: sequences } = await supabase.from("sequences").select("*").eq("status", "active");
-
-    if (!sequences || sequences.length === 0) {
+    const users = await listGmailUsers(supabase);
+    if (users.length === 0) {
       return new Response(
-        JSON.stringify({
-          success: true,
-          message: "No active sequences",
-          processed: 0,
-          sent: 0,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        JSON.stringify({ success: true, message: "No connected users", processed: 0, sent: 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     let totalProcessed = 0;
     let totalSent = 0;
 
-    outer: for (const sequence of sequences) {
-      // Get recipients ready to send (skip replied/bounced/closed AND respect human-takeover lock)
-      const { data: recipients } = await supabase
-        .from("sequence_recipients")
+    perUser: for (const userId of users) {
+      // Read send caps from user_settings (with fallbacks)
+      const { data: settings } = await supabase
+        .from("user_settings")
+        .select("per_tick_email_cap, daily_email_cap, display_name, signature")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const perTickCap: number = settings?.per_tick_email_cap ?? 10;
+      const sender = {
+        display_name: settings?.display_name ?? "You",
+        signature: settings?.signature ?? "",
+      };
+
+      // Get this user's active sequences
+      const { data: sequences } = await supabase
+        .from("sequences")
         .select("*")
-        .eq("sequence_id", sequence.id)
-        .eq("automation_active", true)
-        .neq("state", "replied")
-        .neq("state", "bounced")
-        .neq("state", "closed")
-        .lte("next_send_at", new Date().toISOString());
+        .eq("user_id", userId)
+        .eq("status", "active");
 
-      if (!recipients || recipients.length === 0) continue;
+      if (!sequences || sequences.length === 0) continue;
 
-      for (const recipient of recipients) {
-        if (totalSent >= perTickCap) {
-          await log(supabase, "info", "process-pending-sends", "per-tick cap reached", {
-            perTickCap,
-          });
-          break outer;
-        }
-        totalProcessed++;
+      for (const sequence of sequences) {
+        // Get recipients ready to send (skip replied/bounced/closed AND respect human-takeover lock)
+        const { data: recipients } = await supabase
+          .from("sequence_recipients")
+          .select("*")
+          .eq("sequence_id", sequence.id)
+          .eq("automation_active", true)
+          .neq("state", "replied")
+          .neq("state", "bounced")
+          .neq("state", "closed")
+          .lte("next_send_at", new Date().toISOString());
 
-        try {
-          // Get next step to send
-          const step = await getNextStep(supabase, sequence.id, recipient.state);
+        if (!recipients || recipients.length === 0) continue;
 
-          if (!step) {
-            // No more steps, mark as closed
-            await supabase
-              .from("sequence_recipients")
-              .update({ state: "closed" })
-              .eq("id", recipient.id);
-            continue;
+        for (const recipient of recipients) {
+          if (totalSent >= perTickCap) {
+            await log(supabase, "info", "process-pending-sends", "per-tick cap reached", {
+              perTickCap,
+            });
+            continue perUser;
           }
+          totalProcessed++;
 
-          // Get contact details
-          const { data: contact } = await supabase
-            .from("contacts")
-            .select("*")
-            .eq("id", recipient.contact_id)
-            .single();
+          try {
+            // Get next step to send
+            const step = await getNextStep(supabase, sequence.id, recipient.state);
 
-          if (!contact || !contact.email) continue;
+            if (!step) {
+              // No more steps, mark as closed
+              await supabase
+                .from("sequence_recipients")
+                .update({ state: "closed" })
+                .eq("id", recipient.id);
+              continue;
+            }
 
-          // Render template (with sender signature)
-          const subject = renderTemplate(step.template_subject, contact, sender);
-          const body = renderTemplate(step.template_body, contact, sender);
+            // Get contact details
+            const { data: contact } = await supabase
+              .from("contacts")
+              .select("*")
+              .eq("id", recipient.contact_id)
+              .single();
 
-          // Send email via Edge Function — 1 retry on failure
-          let sendResult = await sendEmailViaGmail(
-            contact.email,
-            subject,
-            body,
-            recipient.id,
-            step.step_number,
-          );
-          if (!sendResult.success) {
-            await new Promise((r) => setTimeout(r, 1500));
-            sendResult = await sendEmailViaGmail(
+            if (!contact || !contact.email) continue;
+
+            // Render template (with sender signature)
+            const subject = renderTemplate(step.template_subject, contact, sender);
+            const body = renderTemplate(step.template_body, contact, sender);
+
+            // Send email via Edge Function — 1 retry on failure
+            let sendResult = await sendEmailViaGmail(
+              userId,
               contact.email,
               subject,
               body,
               recipient.id,
               step.step_number,
             );
-          }
-
-          if (sendResult.success) {
-            totalSent++;
-
-            // Calculate next send time
-            const { data: nextStep } = await supabase
-              .from("sequence_steps")
-              .select("*")
-              .eq("sequence_id", sequence.id)
-              .eq("step_number", step.step_number + 1)
-              .single();
-
-            let nextSendAt = null;
-            if (nextStep) {
-              const delayMs = nextStep.delay_days * 24 * 60 * 60 * 1000;
-              nextSendAt = new Date(Date.now() + delayMs).toISOString();
+            if (!sendResult.success) {
+              await new Promise((r) => setTimeout(r, 1500));
+              sendResult = await sendEmailViaGmail(
+                userId,
+                contact.email,
+                subject,
+                body,
+                recipient.id,
+                step.step_number,
+              );
             }
 
-            // Update recipient state
-            const nextState = getNextState(step.step_type);
-            await supabase
-              .from("sequence_recipients")
-              .update({
-                state: nextState,
-                next_send_at: nextSendAt,
-              })
-              .eq("id", recipient.id);
+            if (sendResult.success) {
+              totalSent++;
 
-            console.log(`[Cron] Sent email to ${contact.email} (state: ${nextState})`);
-          } else {
-            await log(supabase, "error", "process-pending-sends", "send failed", {
-              recipientId: recipient.id,
-              email: contact.email,
-              error: sendResult.error,
-            });
-            // Persistent 4xx = mark bounced and stop trying
-            if (sendResult.status && sendResult.status >= 400 && sendResult.status < 500) {
+              // Calculate next send time
+              const { data: nextStep } = await supabase
+                .from("sequence_steps")
+                .select("*")
+                .eq("sequence_id", sequence.id)
+                .eq("step_number", step.step_number + 1)
+                .single();
+
+              let nextSendAt = null;
+              if (nextStep) {
+                const delayMs = nextStep.delay_days * 24 * 60 * 60 * 1000;
+                nextSendAt = new Date(Date.now() + delayMs).toISOString();
+              }
+
+              // Update recipient state
+              const nextState = getNextState(step.step_type);
               await supabase
                 .from("sequence_recipients")
-                .update({ state: "bounced", automation_active: false, lock_reason: "bounced" })
+                .update({
+                  state: nextState,
+                  next_send_at: nextSendAt,
+                })
                 .eq("id", recipient.id);
+
+              console.log(`[Cron] Sent email to ${contact.email} (state: ${nextState})`);
+            } else {
+              await log(supabase, "error", "process-pending-sends", "send failed", {
+                recipientId: recipient.id,
+                email: contact.email,
+                error: sendResult.error,
+              });
+              // Persistent 4xx = mark bounced and stop trying
+              if (sendResult.status && sendResult.status >= 400 && sendResult.status < 500) {
+                await supabase
+                  .from("sequence_recipients")
+                  .update({ state: "bounced", automation_active: false, lock_reason: "bounced" })
+                  .eq("id", recipient.id);
+              }
             }
+          } catch (error) {
+            await log(supabase, "error", "process-pending-sends", "unexpected error", {
+              recipientId: recipient.id,
+              error: error instanceof Error ? error.message : String(error),
+            });
           }
-        } catch (error: any) {
-          await log(supabase, "error", "process-pending-sends", "unexpected error", {
-            recipientId: recipient.id,
-            error: error.message,
-          });
         }
       }
     }
@@ -205,12 +208,12 @@ serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("[Cron Error]", error);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         processed: 0,
         sent: 0,
       }),
@@ -250,7 +253,7 @@ async function log(supabase: any, level: string, fn: string, message: string, pa
     // Logging failures must not crash the loop
   }
   // Also emit to deno console
-  // eslint-disable-next-line no-console
+
   console.log(`[${fn}] ${level.toUpperCase()} ${message}`, payload ?? "");
 }
 
@@ -291,6 +294,7 @@ async function getNextStep(
 }
 
 async function sendEmailViaGmail(
+  userId: string,
   to: string,
   subject: string,
   body: string,
@@ -305,14 +309,16 @@ async function sendEmailViaGmail(
         "Content-Type": "application/json",
         Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
       },
-      body: JSON.stringify({ to, subject, body, recipientId, stepNumber }),
+      body: JSON.stringify({ to, subject, body, recipientId, stepNumber, userId }),
     });
 
     if (!response.ok) {
       let err: any = {};
       try {
         err = await response.json();
-      } catch (_e) {}
+      } catch (_e) {
+        // ignore JSON parse failure; fall back to status code
+      }
       return {
         success: false,
         error: err.error ?? `HTTP ${response.status}`,
@@ -320,7 +326,7 @@ async function sendEmailViaGmail(
       };
     }
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }

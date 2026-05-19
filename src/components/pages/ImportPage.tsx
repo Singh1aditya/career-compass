@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,11 +28,12 @@ import {
   type ContactPreview,
 } from "@/lib/csv-utils";
 
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 type ImportStep = "upload" | "mapping" | "preview" | "importing" | "complete";
 
 export function ImportPage() {
+  const { user } = useAuth();
   const [step, setStep] = useState<ImportStep>("upload");
   const [isDragActive, setIsDragActive] = useState(false);
   const [csvRows, setCSVRows] = useState<CSVRow[]>([]);
@@ -60,8 +62,8 @@ export function ImportPage() {
       // Move to mapping step
       setStep("mapping");
       toast.success(`Loaded ${rows.length} rows from CSV`);
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -95,7 +97,9 @@ export function ImportPage() {
       const { data: existingContacts } = await supabase.from("contacts").select("email");
 
       const existingEmails = new Set(
-        (existingContacts || []).map((c: any) => c.email?.toLowerCase()).filter(Boolean),
+        (existingContacts || [])
+          .map((c: { email: string | null }) => c.email?.toLowerCase())
+          .filter((e): e is string => Boolean(e)),
       );
 
       // Find duplicates
@@ -113,8 +117,8 @@ export function ImportPage() {
       }
 
       setStep("preview");
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -140,7 +144,7 @@ export function ImportPage() {
             role: contact.role || null,
             contact_type: contact.contact_type,
             notes: contact.notes || null,
-            user_id: DEFAULT_USER_ID,
+            user_id: user!.id,
             status: "active",
           });
 
@@ -162,8 +166,8 @@ export function ImportPage() {
       setImportResult({ created, duplicates, errors });
       setStep("complete");
       toast.success(`Imported ${created} contacts`);
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error));
     } finally {
       setImporting(false);
     }
@@ -277,11 +281,11 @@ export function ImportPage() {
                   <div className="flex-1">
                     <Label className="text-xs">Map to</Label>
                     <Select
-                      value={mapping[col] || ""}
+                      value={mapping[col] || "__skip__"}
                       onValueChange={(val) => {
                         setMapping({
                           ...mapping,
-                          [col]: val || null,
+                          [col]: val === "__skip__" ? null : val,
                         });
                       }}
                     >
@@ -289,7 +293,7 @@ export function ImportPage() {
                         <SelectValue placeholder="Skip this column" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Skip</SelectItem>
+                        <SelectItem value="__skip__">Skip this column</SelectItem>
                         <SelectItem value="name">Name</SelectItem>
                         <SelectItem value="email">Email</SelectItem>
                         <SelectItem value="phone">Phone</SelectItem>
@@ -422,17 +426,23 @@ export function ImportPage() {
               </div>
             </div>
 
-            <Button
-              className="w-full"
-              onClick={() => {
-                setStep("upload");
-                setContacts([]);
-                setValidationErrors([]);
-                setImportResult(null);
-              }}
-            >
-              Import More Contacts
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Link to="/contacts" className="flex-1">
+                <Button className="w-full">View imported contacts</Button>
+              </Link>
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setStep("upload");
+                  setContacts([]);
+                  setValidationErrors([]);
+                  setImportResult(null);
+                }}
+              >
+                Import more
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Plus, X } from "lucide-react";
 import { toast } from "sonner";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Tag {
   id: string;
@@ -21,6 +21,7 @@ interface Props {
 const PRESET_COLORS = ["#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6", "#EC4899", "#6B7280"];
 
 export function TagEditor({ contactId }: Props) {
+  const { user } = useAuth();
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [contactTagIds, setContactTagIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,7 @@ export function TagEditor({ contactId }: Props) {
       supabase.from("contact_tags").select("tag_id").eq("contact_id", contactId),
     ]);
     setAllTags((tagsRes.data as Tag[]) ?? []);
-    setContactTagIds(new Set((joinRes.data ?? []).map((r: any) => r.tag_id)));
+    setContactTagIds(new Set((joinRes.data ?? []).map((r: { tag_id: string }) => r.tag_id)));
     setLoading(false);
   };
 
@@ -70,7 +71,7 @@ export function TagEditor({ contactId }: Props) {
     if (!name) return;
     const { data, error } = await supabase
       .from("tags")
-      .insert({ user_id: DEFAULT_USER_ID, name, color: newTagColor })
+      .insert({ user_id: user!.id, name, color: newTagColor })
       .select()
       .single();
     if (error) {

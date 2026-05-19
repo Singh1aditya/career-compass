@@ -37,9 +37,7 @@ test.describe("XSS protection", () => {
     }
 
     expect(xssTriggered).toBe(false);
-    const xssExecuted = await page.evaluate(
-      () => (window as Window & { __xss?: boolean }).__xss,
-    );
+    const xssExecuted = await page.evaluate(() => (window as Window & { __xss?: boolean }).__xss);
     expect(xssExecuted).toBeFalsy();
   });
 

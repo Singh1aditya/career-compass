@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.0";
+import { getUserIdFromJWT, LEGACY_USER_ID } from "../_shared/constants.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,10 @@ interface SendEmailPayload {
   body: string;
   recipientId: string;
   stepNumber: number;
+  // Optional — cron invoker (process-pending-sends) passes the sequence
+  // owner's id explicitly because it has no JWT. Browser callers can omit
+  // this and we'll derive it from the Authorization header.
+  userId?: string;
 }
 
 serve(async (req: Request) => {
@@ -27,13 +32,13 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    import { DEFAULT_USER_ID } from "../_shared/constants.ts";
+    const userId = payload.userId ?? getUserIdFromJWT(req) ?? LEGACY_USER_ID;
 
     // Get user's Gmail OAuth token
     const { data: oauthToken, error: tokenError } = await supabase
       .from("oauth_tokens")
       .select("*")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", userId)
       .eq("provider", "gmail")
       .single();
 
@@ -53,11 +58,7 @@ serve(async (req: Request) => {
     // Check if token is expired
     if (oauthToken.expires_at && new Date(oauthToken.expires_at) < new Date()) {
       // Refresh token
-      const refreshed = await refreshGmailToken(
-        supabase,
-        DEFAULT_USER_ID,
-        oauthToken.refresh_token,
-      );
+      const refreshed = await refreshGmailToken(supabase, userId, oauthToken.refresh_token);
 
       if (!refreshed) {
         return new Response(
@@ -77,7 +78,7 @@ serve(async (req: Request) => {
     const { data: freshToken } = await supabase
       .from("oauth_tokens")
       .select("access_token")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", userId)
       .eq("provider", "gmail")
       .single();
 
@@ -121,12 +122,18 @@ serve(async (req: Request) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       },
     );
-  } catch (error: any) {
+  } catch (error) {
     console.error("[Function Error]", error);
-    return new Response(JSON.stringify({ success: false, error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 });
 
@@ -173,10 +180,10 @@ async function sendViaGmailAPI(
       messageId: result.id,
       threadId: result.threadId,
     };
-  } catch (error: any) {
+  } catch (error) {
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }

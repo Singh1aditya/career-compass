@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { supabase } from "@/integrations/supabase/client";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
@@ -48,16 +48,18 @@ const KIND_LABELS: Record<string, string> = {
 
 export function CalendarPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [month, setMonth] = useState<Date>(new Date());
   const [events, setEvents] = useState<CRMEvent[]>([]);
   const [selected, setSelected] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadEvents();
-  }, [month]);
+    if (user) loadEvents();
+  }, [month, user]);
 
   const loadEvents = async () => {
+    if (!user) return;
     setLoading(true);
     const from = startOfMonth(month).toISOString();
     const to = endOfMonth(addMonths(month, 0)).toISOString();
@@ -66,7 +68,7 @@ export function CalendarPage() {
     const { data, error } = await (supabase as any)
       .from("events")
       .select("*, applications(role_title, company_name)")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", user.id)
       .gte("scheduled_at", from)
       .lte("scheduled_at", to)
       .order("scheduled_at");

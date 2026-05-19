@@ -82,10 +82,10 @@ export function AIComposeButton({
 
       if (error) throw new Error(error.message);
 
-      const result = (data as any)?.output ?? "";
+      const result = (data as { output?: string })?.output ?? "";
       setOutput(result);
-    } catch (e: any) {
-      toast.error(e?.message ?? "AI generation failed");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI generation failed");
     } finally {
       setLoading(false);
     }

@@ -109,7 +109,11 @@ export function ContactDetailPage({ contactId }: Props) {
 
     // Applications linked through interactions
     const appIds = Array.from(
-      new Set((ints ?? []).map((i: any) => i.application_id).filter(Boolean)),
+      new Set(
+        (ints ?? [])
+          .map((i: { application_id: string | null }) => i.application_id)
+          .filter((id): id is string => Boolean(id)),
+      ),
     );
     if (appIds.length > 0) {
       const { data: apps } = await supabase
@@ -251,7 +255,8 @@ export function ContactDetailPage({ contactId }: Props) {
       </Card>
 
       <Tabs defaultValue="overview">
-        <TabsList>
+        <div className="overflow-x-auto -mx-1 px-1">
+        <TabsList className="w-max">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="interactions">
             Interactions {interactions.length > 0 && `(${interactions.length})`}
@@ -263,6 +268,7 @@ export function ContactDetailPage({ contactId }: Props) {
           <TabsTrigger value="followups">Follow-ups</TabsTrigger>
           <TabsTrigger value="files">Files</TabsTrigger>
         </TabsList>
+        </div>
 
         <TabsContent value="overview">
           <Card>

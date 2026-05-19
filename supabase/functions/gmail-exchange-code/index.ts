@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { DEFAULT_USER_ID } from "../_shared/constants.ts";
+import { getUserIdFromJWT, LEGACY_USER_ID } from "../_shared/constants.ts";
 
 interface ExchangePayload {
   code: string;
@@ -19,6 +19,7 @@ serve(async (req: Request) => {
   }
 
   try {
+    const userId = getUserIdFromJWT(req) ?? LEGACY_USER_ID;
     const payload: ExchangePayload = await req.json();
 
     if (!payload.code) {
@@ -82,7 +83,7 @@ serve(async (req: Request) => {
 
     const { error: dbError } = await supabase.from("oauth_tokens").upsert(
       {
-        user_id: DEFAULT_USER_ID,
+        user_id: userId,
         provider: "gmail",
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,

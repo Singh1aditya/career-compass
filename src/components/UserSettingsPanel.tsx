@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { User, Save } from "lucide-react";
 import { toast } from "sonner";
 import { clearSenderCache } from "@/lib/templates";
-import { DEFAULT_USER_ID } from "@/lib/constants";
+import { useAuth } from "@/hooks/use-auth";
 
 interface Settings {
   display_name: string | null;
@@ -18,6 +18,7 @@ interface Settings {
 }
 
 export function UserSettingsPanel() {
+  const { user } = useAuth();
   const [s, setS] = useState<Settings>({
     display_name: "",
     signature: "",
@@ -28,23 +29,25 @@ export function UserSettingsPanel() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    load();
-  }, []);
+    if (user) load();
+  }, [user]);
 
   const load = async () => {
+    if (!user) return;
     const { data } = await supabase
       .from("user_settings")
       .select("*")
-      .eq("user_id", DEFAULT_USER_ID)
+      .eq("user_id", user.id)
       .maybeSingle();
     if (data) setS(data as Settings);
     setLoading(false);
   };
 
   const save = async () => {
+    if (!user) return;
     setSaving(true);
     const { error } = await supabase.from("user_settings").upsert({
-      user_id: DEFAULT_USER_ID,
+      user_id: user.id,
       display_name: s.display_name || null,
       signature: s.signature || null,
       daily_email_cap: s.daily_email_cap,

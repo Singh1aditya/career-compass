@@ -74,8 +74,8 @@ export function EmailScanStatus({ gmailConnected }: { gmailConnected: boolean })
         `Scanned ${summary.scanned} emails — created ${summary.created}, updated ${summary.updated}`,
       );
       await loadStats();
-    } catch (err: any) {
-      toast.error(err.message || "Failed to scan inbox");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to scan inbox");
     } finally {
       setScanning(false);
     }
